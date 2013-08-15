@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Memento Date-Time Picker</title>
+        <link rel="stylesheet" href="jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
+        <style>
+            body {
+                min-width: 300px;
+                min-height: 350px;
+                overflow-x: hidden;
+            }
+        </style>
+        <script src="jquery-ui/js/jquery-1.9.1.js"></script>
+        <script src="jquery-ui/js/jquery-ui-1.10.3.custom.min.js"></script>
+        <script src="popup.js"></script>
+        <script src="menu.js"></script>
+    </head>
+    <body>
+        <h3>Memento</h3>
+        <p>Select a date in the past to enable time travel.
+        <p>
+            <span>Date: <input type="text" id="datepicker" /></span>
+            <span>Time: <input type="text" id="timepicker" size="10" value="00:00:00" /></span>
+        </p>
+        <div id="savedMessage" />
+    </body>
+</html>
