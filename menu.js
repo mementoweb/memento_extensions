@@ -2,6 +2,15 @@
 var Memento = {
 
     aggregatorUrl: "http://mementoproxy.lanl.gov/aggr/timegate/",
+    shouldProcessEmbeddedResources: false,
+    isMementoActive: false,
+    mementoDatetime: false,
+    isNativeMemento: false,
+    acceptDatetime: {},
+    timegateUrl: false,
+    originalUrl: false,
+    mementoUrl: false,
+    mementoBaseUrl: false,
 
     parseLinkHeader : function(link) {
         var state = 'start';
@@ -108,39 +117,34 @@ var Memento = {
         return null;
     },
 
-    linkHeaderForThisResource: "",
-
-    saveHeadersForThisResource: function(headers) {
-        for (var i=0, h; h=headers[i]; i++) {
-            if (h.name.toLowerCase() == "link") {
-                Memento.linkHeaderForThisResource = h.value
-                break;
+    getLinkHeader: function(headers) {
+        if (typeof(headers) == "object") {
+            for (var i=0, h; h=headers[i]; i++) {
+                if (h.name.toLowerCase() == "link") {
+                    return h.value
+                }
             }
         }
+        else if (typeof(headers) == "string"){
+            var headerLines = headers.split("\n")
+            for (header in headerLines) {
+                var linkParts = headerLines[header].split(':')
+                if (linkParts[0].trim().toLowerCase() == "link") {
+                    return linkParts.slice(1, linkParts.length).join(":")
+                }
+            }
+        }
+        return false
     },
 
-    getRelUriFromHeaders: function(headers, rel, originalUrl) {
-        var linkHeader = ""
-        var tgUrl = ""
-        var headerLines = headers.split("\n")
-        for (header in headerLines) {
-            var linkParts = headerLines[header].split(':')
-            if (linkParts[0].trim().toLowerCase() == "link") {
-                linkHeader = linkParts.slice(1, linkParts.length).join(":")
-            }
-        }
+    getRelUriFromHeaders: function(headers, rel) {
+        var linkHeader = Memento.getLinkHeader(headers)
+        var relUrl = false
         if (linkHeader != "") {
             var links = Memento.parseLinkHeader(linkHeader.trim())
-            tgUrl = Memento.getUriForRel(links, rel)
+            relUrl = Memento.getUriForRel(links, rel)
         }
-        
-        if (tgUrl == "" || tgUrl == null && originalUrl != undefined) {
-            tgUrl = Memento.aggregatorUrl + originalUrl;
-        }
-        else  {
-            return false
-        }
-        return tgUrl
+        return relUrl
     },
 
     ajax: function(uri, method) {
@@ -243,11 +247,7 @@ var Menu = {
     contexts: ["page", "link", "image", "video", "audio"],
     contextUrlLabel: ["linkUrl", "srcUrl", "frameUrl", "pageUrl"],
     originalUrl: "",
-    acceptDatetime: {},
     readableAcceptDatetime: "",
-    isCurrentResourceAMemento: false,
-    shouldProcessEmbeddedResources: false,
-    isMementoActive: false,
     isDatetimeModified: false,
     originalMenuIds: [],
     mementoMenuIds: [],
@@ -286,34 +286,42 @@ var Menu = {
         if (clickedForOriginal) {
             var orgUrl = ""
             if (pageUrl) {
+                /*
                 var links = Memento.parseLinkHeader(Memento.linkHeaderForThisResource.trim())
                 var orgUrl = Memento.getUriForRel(links, "original")
                 if (orgUrl == "") {
                     orgUrl = Memento.aggregatorUrl + clickedUrl;
                 }
+                */
+                orgUrl = Memento.originalUrl
             }
             else {
                 var headResponse = Memento.ajax(clickedUrl, "HEAD")
-                orgUrl = Memento.getRelUriFromHeaders(headResponse.getAllResponseHeaders(), "original", clickedUrl)
+                orgUrl = Memento.getRelUriFromHeaders(headResponse.getAllResponseHeaders(), "original")
             }
             if (orgUrl == "") {
                 orgUrl = clickedUrl
             }
             
-            Menu.isCurrentResourceAMemento = false
-            Menu.isMementoActive = false
+            Memento.mementoDatetime = false
+            Memento.isMementoActive = false
+            Memento.shouldProcessEmbeddedResources = false
             chrome.tabs.update(tab.tabId, {url: orgUrl})
             return
         }
         else if (clickedForMemento) {
             var tgUrl = ""
             if (pageUrl) {
-                var links = Memento.parseLinkHeader(Memento.linkHeaderForThisResource.trim())
-                tgUrl = Memento.getUriForRel(links, "timegate")
+                //var links = Memento.parseLinkHeader(Memento.linkHeaderForThisResource.trim())
+                //tgUrl = Memento.getUriForRel(links, "timegate")
+                tgUrl = Memento.timegateUrl
             }
             if (tgUrl == "" || tgUrl == null) {
                 var headResponse = Memento.ajax(clickedUrl, "HEAD")
-                tgUrl = Memento.getRelUriFromHeaders(headResponse.getAllResponseHeaders(), "timegate", clickedUrl)
+                tgUrl = Memento.getRelUriFromHeaders(headResponse.getAllResponseHeaders(), "timegate")
+                if (!tgUrl) {
+                    tgUrl = Memento.aggregatorUrl + clickedUrl
+                }
             }
             /*
             var list = Memento.getRewrittenUriArchives()
@@ -328,8 +336,8 @@ var Menu = {
             }
             */
             window.setTimeout(Memento.clearCache(), 2000)
-            Menu.isCurrentResourceAMemento = true
-            Menu.isMementoActive = true
+            Memento.isMementoActive = true
+            Memento.shouldProcessEmbeddedResources = true
             Menu.isDatetimeModified = false
             chrome.tabs.update(tab.tabId, {url: tgUrl})
             return
@@ -340,20 +348,24 @@ var Menu = {
     setReadableAcceptDatetime: function(callback) {
         chrome.storage.local.get("accept-datetime-readable", function(items) {
             Menu.readableAcceptDatetime = items["accept-datetime-readable"]        
-            Menu.acceptDatetime = new Date(Menu.readableAcceptDatetime)
+            Memento.acceptDatetime = new Date(Menu.readableAcceptDatetime)
             if (callback) {
                 callback()
             }
         })
     },
 
-    createContextMenuEntry: function(title, context, enabled) {
+    createContextMenuEntry: function(title, context, enabled, targetUrl) {
+        if (targetUrl == undefined || targetUrl == null) 
+            targetUrl = ["<all_urls>"]
 
         var id = chrome.contextMenus.create({
             "title": title,
             "type": "normal",
             "contexts": context,
-            "enabled": enabled
+            "enabled": enabled,
+            //"documentUrlPatterns": targetUrl,
+            "targetUrlPatterns": targetUrl
         })
         return id
     },
@@ -361,34 +373,31 @@ var Menu = {
     updateContextMenu: function() {
         var title = ""
         
-        if (Menu.readableAcceptDatetime == null || Menu.readableAcceptDatetime == "") {
-            Menu.setReadableAcceptDatetime()
-        }
 
         for (var i=0, c; c=Menu.contexts[i]; i++) {
             t = []
             if (c == "page") {
-                // Menu to load current item        
                 var title = "Load this resource at current time"
                 var enabled = false
                 t.push(c)
-                if (Menu.isCurrentResourceAMemento || Menu.isDatetimeModified) {
+                if (Memento.mementoDatetime || Menu.isDatetimeModified) {
                     enabled = true
                 }
-                console.log(enabled)
+                console.log("MENU: current enabled: " + enabled)
                 Menu.originalMenuIds.push(Menu.createContextMenuEntry(title, t, enabled))
 
                 title = "Load this resource at " + Menu.readableAcceptDatetime
                 enabled = false
-                if (!Menu.isCurrentResourceAMemento || Menu.isDatetimeModified) {
+                if (!Memento.mementoDatetime || Menu.isDatetimeModified) {
                     enabled = true
                 }
+                console.log("MENU: memento enabled: " + enabled)
                 Menu.mementoMenuIds.push(Menu.createContextMenuEntry(title, t, enabled))
             }
             else {
                 var title = "Load this resource at current time"
                 var enabled = false
-                if (Menu.isCurrentResourceAMemento) {
+                if (Memento.mementoDatetime) {
                     enabled = true
                 }
                 t.push(c)
@@ -398,18 +407,35 @@ var Menu = {
                 enabled = true
                 Menu.mementoMenuIds.push(Menu.createContextMenuEntry(title, t, enabled))
 
+                enabled = true
+                for (url in Memento.hrefDatetime) {
+                    targetUrl = []
+                    if (Memento.hrefDatetime[url] != 0) {
+                        targetUrl.push(url)
+                        if (targetUrl.length <= 0)
+                            enabled = false
+                        title = "Get memento for " + Memento.hrefDatetime[url]
+
+                        Menu.mementoMenuIds.push(Menu.createContextMenuEntry(title, t, enabled, targetUrl))
+                    }
+                }
             }
-            
         }
     },
 
     update: function() {
         chrome.contextMenus.removeAll()
+        if (Menu.readableAcceptDatetime == null || Menu.readableAcceptDatetime == "") {
+            Menu.setReadableAcceptDatetime()
+        }
+        if (!Menu.readableAcceptDatetime) {
+            Menu.init()
+            return
+        }
         Menu.updateContextMenu()
     },
 
     init: function() {
-
         title = "Click Memento icon to select date-time"
         this.menuId = chrome.contextMenus.create({
             "title": title,
@@ -432,24 +458,37 @@ chrome.webRequest.onBeforeRequest.addListener( function(request) {
     }
     requestIds.push(request.requestId)
     
-    if (request.type != "main_frame" && Menu.shouldProcessEmbeddedResources && request.url.search("chrome-extension://") < 0) {
-        var list = Memento.getWhiteList()
-        for (var i=0, regex; regex=list[i]; i++) {
-            if (request.url.match(regex)) {
-                return
-            }
-        }
+    /* 
+     * processing embedded resources. 
+     */
+    if (request.type != "main_frame" 
+            && Memento.shouldProcessEmbeddedResources 
+            && request.url.search("chrome-extension://") < 0) {
         
+        /*
+         * Testing for re-written embedded urls by comparing the base url of 
+         * the memento with the url of the embedded resource. The 
+         * embedded resources will have the same host if it's rewritten.
+         */
+        if (request.url.search(Memento.mementoBaseUrl) == 0) {
+            Memento.shouldProcessEmbeddedResources = false
+            return
+        }
         var embedResponse = Memento.ajax(request.url, "HEAD")
-        var tgUrl = Memento.getRelUriFromHeaders(embedResponse.getAllResponseHeaders(), "timegate", request.url)
-        //console.log("intercepted "+request.url + " redirecting to " + tgUrl)
+        var tgUrl = Memento.getRelUriFromHeaders(embedResponse.getAllResponseHeaders(), "timegate")
+        if (!tgUrl) {
+            tgUrl = Memento.aggregatorUrl + request.url
+        }
+        console.log("intercepted "+request.url + " redirecting to " + tgUrl)
         return {redirectUrl: tgUrl}
     }
     else if (request.type == "main_frame") {
+        console.log("MEMENTO: resetting all the flags")
         requestIds = []
         Memento.timegateUrl = false
         Memento.originalUrl = false
         Memento.mementoDatetime = false
+        Memento.mementoUrl = false
         Memento.isNativeMemento = false
         Memento.shouldProcessEmbeddedResources = false
     }
@@ -460,8 +499,9 @@ chrome.webRequest.onBeforeRequest.addListener( function(request) {
 
 chrome.webRequest.onBeforeSendHeaders.addListener( function(request) {
     
-    if (Menu.isMementoActive) {
-        Memento.appendAcceptDatetimeHeader(request.requestHeaders, Menu.acceptDatetime.toGMTString())
+    if (Memento.isMementoActive) {
+        console.log("MEMENTO: setting accept-datetime header")
+        Memento.appendAcceptDatetimeHeader(request.requestHeaders, Memento.acceptDatetime.toGMTString())
         return {requestHeaders: request.requestHeaders}
     }
 },
@@ -472,52 +512,62 @@ chrome.webRequest.MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES = 100
 
 chrome.webRequest.onHeadersReceived.addListener( function(response) {
     if (response.type == "main_frame") {
-        /*
-        // checking if the current resource is a wayback memento url... 
-        // these are re-written urls, not going to process embedded resources 
-        var list = Memento.getWayBackUris()
-        for (var i=0, regex; regex=list[i]; i++) {
-            if (response.url.match(regex)) {
-                Menu.isCurrentResourceAMemento = true
-                Menu.shouldProcessEmbeddedResources = false
-                console.log("here url: " + response.url)
-                Memento.saveHeadersForThisResource(response.responseHeaders)
-                Menu.update()
-                return
-            }
-        }
-        // checking for other url patters that does not need embedded resources processed. 
-        var list = Memento.getWhiteList()
-        for (var i=0, regex; regex=list[i]; i++) {
-            if (response.url.match(regex)) {
-                Menu.isCurrentResourceAMemento = true
-                Menu.shouldProcessEmbeddedResources = false
-                Memento.saveHeadersForThisResource(response.responseHeaders)
-                Menu.update()
-                return
-            }
-        }
-        */
+        /* 
+         * checking for 2 possibilities: original or memento
+         */
         Memento.timegateUrl = Memento.getRelUriFromHeaders(response.responseHeaders, "timegate")
         Memento.originalUrl = Memento.getRelUriFromHeaders(response.responseHeaders, "original")
-        // checking for native memento headers first
+        
+        /* 
+         * checking if this is a native memento resource
+         * the "memento-datetime" header confirms this
+         */
         for (var i=0, h; h=response.responseHeaders[i]; i++) {
             if (h.name.toLowerCase() == "memento-datetime") {
-                console.log("mem-dt found")
-                Memento.timegateUrl = Memento.getRelUriFromHeaders(response.responseHeaders, "timegate")
+                console.log("MEMENTO: mem-dt found")
+                console.log(response.responseHeaders)
                 Memento.mementoDatetime = h.value
                 Memento.isNativeMemento = true
+                Memento.shouldProcessEmbeddedResources = true
+                Memento.isMementoActive = true
+                Memento.mementoUrl = response.url
+
+                /* 
+                 * setting base url of the memento
+                 * will be used to determine if the embedded resources are processed.
+                 */
+                var protocol = ""
+                if (Memento.mementoUrl.slice(0,7) == "http://") {
+                    protocol = "http://"
+                }
+                else if (Memento.mementoUrl.slice(0,8) == "https://") {
+                    protocol = "https://"
+                }
+                baseUrl = Memento.mementoUrl.replace(protocol, "")
+                Memento.mementoBaseUrl = protocol + baseUrl.split("/")[0]
+
                 Menu.update()
                 return
             }
         }
+
+        /* 
+         * checking for non-native memento resources. 
+         * setting psuedo memento datetime header
+         */
+        if (Memento.isMementoActive) {
+            Memento.mementoDatetime = Memento.acceptDatetime.toGMTString()
+            Memento.shouldProcessEmbeddedResources = false
+            Memento.mementoUrl = response.url
+        }
+
         if (!Memento.originalUrl) {
             Memento.originalUrl = response.url
         }
         if (!Memento.timegateUrl) {
             Memento.timegateUrl = Memento.aggregatorUrl + Memento.originalUrl
         }
-        
+        console.log("MEMENTO: " + Memento.originalUrl, Memento.timegateUrl)
         Menu.update()
     }
 },
@@ -526,9 +576,9 @@ chrome.webRequest.onHeadersReceived.addListener( function(response) {
 
 chrome.storage.onChanged.addListener( function(changes, namespace) {
     Menu.readableAcceptDatetime = changes['accept-datetime-readable']['newValue']
-    Menu.acceptDatetime = new Date(Menu.readableAcceptDatetime)
-    if (Menu.isCurrentResourceAMemento) {
-        console.log("dt modified...")
+    Memento.acceptDatetime = new Date(Menu.readableAcceptDatetime)
+    if (Memento.mementoDatetime) {
+        console.log("MENU: dt modified...")
         Menu.isDatetimeModified = true
     }
     Menu.update()
@@ -537,4 +587,9 @@ chrome.storage.onChanged.addListener( function(changes, namespace) {
 chrome.runtime.onInstalled.addListener(function(details) {
     chrome.contextMenus.removeAll()
     Menu.init()
+})
+
+chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
+    Memento.hrefDatetime = request.hrefDatetime
+    Menu.update()
 })
