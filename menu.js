@@ -407,6 +407,7 @@ var Menu = {
                 enabled = true
                 Menu.mementoMenuIds.push(Menu.createContextMenuEntry(title, t, enabled))
 
+                /*
                 enabled = true
                 for (url in Memento.hrefDatetime) {
                     targetUrl = []
@@ -419,6 +420,7 @@ var Menu = {
                         Menu.mementoMenuIds.push(Menu.createContextMenuEntry(title, t, enabled, targetUrl))
                     }
                 }
+                */
             }
         }
     },
@@ -589,7 +591,9 @@ chrome.runtime.onInstalled.addListener(function(details) {
     Menu.init()
 })
 
+/*
 chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
     Memento.hrefDatetime = request.hrefDatetime
     Menu.update()
 })
+*/
