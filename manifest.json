@@ -12,7 +12,6 @@
         "webRequest",
         "webNavigation",
         "webRequestBlocking"
-        
     ],
 
     "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
@@ -38,6 +37,8 @@
         "default_title": "Memento",
         "default_popup": "popup.html"
     },
+    
+    "devtools_page": "devtools.html",
     
     "icons": {
         "16": "memento-16x16.png"
