@@ -16,7 +16,7 @@ Memento.prototype = {
     
     // MENU Variables
     menuId: 0,
-    contexts: ["page", "link", "image", "video", "audio"],
+    contexts: ["page", "link"],
     contextUrlLabel: ["linkUrl", "srcUrl", "frameUrl", "pageUrl"],
     readableAcceptDatetime: "",
     isDatetimeModified: false,
@@ -188,7 +188,7 @@ Memento.prototype = {
         for (var i=0, h; h=headers[i]; i++) {
             if (h['name'].toLowerCase() == "accept-datetime") {
                 h.pop()
-                //break;
+                break;
             }
         }
         headers.push({"name": "Accept-Datetime", "value": datetime}) 
@@ -214,7 +214,6 @@ Memento.prototype = {
             "type": "normal",
             "contexts": context,
             "enabled": enabled,
-            //"documentUrlPatterns": targetUrl,
             "targetUrlPatterns": targetUrl
         })
         return id
@@ -229,18 +228,12 @@ Memento.prototype = {
                 t.push(c)
                 // SELECTED MEMENTO DATETIME
                 title = "Get near " + this.acceptDatetime.toGMTString()
-                enabled = false
-                if (!this.mementoDatetime || this.isDatetimeModified || this.specialDatetime) {
-                    enabled = true
-                }
+                enabled = true
                 this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // LAST MEMENTO
                 title = "Get near current time"
                 enabled = true
-                if (this.specialDatetime) {
-                    enabled = false
-                }
                 this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // CURRENT TIME
@@ -264,7 +257,7 @@ Memento.prototype = {
                 this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
             }
-            else if (c == "link"){
+            else if (c == "link") {
                 // SELECTED MEMENTO DATETIME
                 t.push(c)
                 title = "Get near " + this.acceptDatetime.toGMTString()
@@ -277,7 +270,6 @@ Memento.prototype = {
                 this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // CURRENT TIME
-                //var title = "Load this resource at current time"
                 var title = "Get at current time"
                 var enabled = false
                 if (this.mementoDatetime) {
@@ -303,23 +295,6 @@ Memento.prototype = {
 
     getOriginalUrl: function(reqUrl) {
         var orgUrl = ""
-        /*
-        var isRedirect = false
-        for (i in this.visitedOriginalUrls) {
-            if (i == reqUrl) {
-                reqUrl = this.visitedOriginalUrls[i]
-                isRedirect = true
-            }
-        }
-
-        this.visitedOriginalUrls[reqUrl] = reqUrl
-        if (!isRedirect) {
-            var orgHeadResponse = this.ajax(reqUrl, "HEAD")
-            console.log(this.visitedOriginalUrls)
-            reqUrl = this.visitedOriginalUrls[reqUrl]
-        }
-        console.log("req url = "+reqUrl)
-        */
 
         var orgHeadResponse = this.ajax(reqUrl, "HEAD")
         orgUrl = this.getRelUriFromHeaders(orgHeadResponse.getAllResponseHeaders(), "original")
@@ -339,7 +314,6 @@ Memento.prototype = {
         if (!orgUrl || orgUrl == "") {
             orgUrl = reqUrl
         }
-        //this.visitedOriginalUrls[reqUrl] = orgUrl
         return orgUrl
     },
 
@@ -349,10 +323,10 @@ Memento.prototype = {
         var tgHeadResponse = this.ajax(orgUrl, "HEAD", true)
         if (this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
             tgUrl = orgUrl
-            //TODO:
-
         }
-        tgUrl = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
+        else {
+            tgUrl = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
+        }
         if (!tgUrl) {
             var doNotNeg = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "type")
             if (doNotNeg == "http://mementoweb.org/terms/donotnegotiate") {
@@ -406,10 +380,10 @@ Extension.prototype = {
     handleContextMenuClick: function(info, tab) {
         var clickedUrl = ""
         var pageUrl = false
-        for (var i in extensionTabs[activeTabId].mem.contextUrlLabel) {
-            if (info[extensionTabs[activeTabId].mem.contextUrlLabel[i]] != undefined) {
-                clickedUrl = info[extensionTabs[activeTabId].mem.contextUrlLabel[i]]
-                pageUrl = (extensionTabs[activeTabId].mem.contextUrlLabel[i] == "pageUrl") ? true : false
+        for (var i in extensionTabs[tab.id].mem.contextUrlLabel) {
+            if (info[extensionTabs[tab.id].mem.contextUrlLabel[i]] != undefined) {
+                clickedUrl = info[extensionTabs[tab.id].mem.contextUrlLabel[i]]
+                pageUrl = (extensionTabs[tab.id].mem.contextUrlLabel[i] == "pageUrl") ? true : false
                 break
             }
         }
@@ -418,28 +392,27 @@ Extension.prototype = {
             console.log(info)
             return
         }
-        //console.log(clickedUrl)
 
         var clickedForOriginal = false
         var clickedForMemento = false
         var clickedForLastMemento = false
-        extensionTabs[activeTabId].mem.specialDatetime = false
+        extensionTabs[tab.id].mem.specialDatetime = false
 
         console.log("clicked url: " + clickedUrl)
 
-        for (var i=0, id; id=extensionTabs[activeTabId].mem.originalMenuIds[i]; i++) {
+        for (var i=0, id; id=extensionTabs[tab.id].mem.originalMenuIds[i]; i++) {
             if (info['menuItemId'] == id) {
                 clickedForOriginal = true
                 break
             }
         }
-        for (var i=0, id; id=extensionTabs[activeTabId].mem.mementoMenuIds[i]; i++) {
+        for (var i=0, id; id=extensionTabs[tab.id].mem.mementoMenuIds[i]; i++) {
             if (info['menuItemId'] == id) {
                 clickedForMemento = true
                 break
             }
         }
-        for (var i=0, id; id=extensionTabs[activeTabId].mem.lastMementoMenuIds[i]; i++) {
+        for (var i=0, id; id=extensionTabs[tab.id].mem.lastMementoMenuIds[i]; i++) {
             if (info['menuItemId'] == id) {
                 clickedForLastMemento = true
                 break
@@ -447,76 +420,81 @@ Extension.prototype = {
         }
         if (clickedForOriginal) {
             var orgUrl = ""
-            orgUrl = extensionTabs[activeTabId].mem.getOriginalUrl(clickedUrl)
+            orgUrl = extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl)
 
-            if (pageUrl && orgUrl == clickedUrl) {
-                orgUrl = (extensionTabs[activeTabId].mem.originalUrl.length > 0)
-                            ? extensionTabs[activeTabId].mem.originalUrl
+            if (pageUrl && orgUrl == clickedUrl && extensionTabs[tab.id].mem.originalUrl != null) {
+                orgUrl = (extensionTabs[tab.id].mem.originalUrl.length > 0)
+                            ? extensionTabs[tab.id].mem.originalUrl
                             : orgUrl
             }
 
-            extensionTabs[activeTabId].mem.mementoDatetime = false
-            extensionTabs[activeTabId].mem.isMementoActive = false
-            extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = false
+            extensionTabs[tab.id].mem.mementoDatetime = false
+            extensionTabs[tab.id].mem.isMementoActive = false
+            extensionTabs[tab.id].mem.shouldProcessEmbeddedResources = false
+            console.log("Loading Original: " + tab.id, tgUrl)
             chrome.tabs.update(tab.id, {url: orgUrl})
             return
         }
         else if (clickedForMemento) {
-            clickedUrl = extensionTabs[activeTabId].mem.filterSearchResultUrl(clickedUrl)
+            clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl)
 
             var tgUrl = ""
-            var orgUrl = extensionTabs[activeTabId].mem.getOriginalUrl(clickedUrl)
-            extensionTabs[activeTabId].mem.clickedOriginalUrl = orgUrl
+            var orgUrl = extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl)
+            extensionTabs[tab.id].mem.clickedOriginalUrl = orgUrl
 
-            tgUrl = extensionTabs[activeTabId].mem.getTimeGateUrl(orgUrl, true)
-            if (pageUrl && tgUrl.search(extensionTabs[activeTabId].mem.aggregatorUrl) == 0) {
-                tgUrl = (extensionTabs[activeTabId].mem.timegateUrl.length > 0) 
-                        ? extensionTabs[activeTabId].mem.timegateUrl 
+            tgUrl = extensionTabs[tab.id].mem.getTimeGateUrl(orgUrl, true)
+            if (pageUrl && tgUrl.search(extensionTabs[tab.id].mem.aggregatorUrl) == 0 && extensionTabs[tab.id].mem.timegateUrl != null) {
+                console.log(extensionTabs[tab.id].mem.timegateUrl)
+                tgUrl = (extensionTabs[tab.id].mem.timegateUrl.length > 0) 
+                        ? extensionTabs[tab.id].mem.timegateUrl 
                         : tgUrl
             }
             if (!tgUrl) {
                 // do not negotiate
-                extensionTabs[activeTabId].mem.isMementoActive = false
-                extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = false
-                extensionTabs[activeTabId].mem.isDatetimeModified = false
+                extensionTabs[tab.id].mem.isMementoActive = false
+                extensionTabs[tab.id].mem.shouldProcessEmbeddedResources = false
+                extensionTabs[tab.id].mem.isDatetimeModified = false
                 chrome.tabs.update(tab.id, {url: clickedUrl})
                 return
             }
-            window.setTimeout(extensionTabs[activeTabId].mem.clearCache(), 2000)
-            extensionTabs[activeTabId].mem.isMementoActive = true
-            extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = true
-            extensionTabs[activeTabId].mem.isDatetimeModified = false
+            window.setTimeout(extensionTabs[tab.id].mem.clearCache(), 2000)
+            extensionTabs[tab.id].mem.isMementoActive = true
+            extensionTabs[tab.id].mem.shouldProcessEmbeddedResources = true
+            extensionTabs[tab.id].mem.isDatetimeModified = false
+            console.log("Loading Memento: " + tab.id, tgUrl)
             chrome.tabs.update(tab.id, {url: tgUrl})
             return
         }
         else if (clickedForLastMemento) {
-            clickedUrl = extensionTabs[activeTabId].mem.filterSearchResultUrl(clickedUrl)
+            clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl)
             var lastMemento = ""
-            var orgUrl = extensionTabs[activeTabId].mem.getOriginalUrl(clickedUrl)
+            var orgUrl = extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl)
 
-            if (!extensionTabs[activeTabId].mem.isMementoActive) {
-                extensionTabs[activeTabId].mem.clickedOriginalUrl = orgUrl
+            if (!extensionTabs[tab.id].mem.isMementoActive) {
+                extensionTabs[tab.id].mem.clickedOriginalUrl = orgUrl
             }
 
-            lastMemento = extensionTabs[activeTabId].mem.getTimeGateUrl(orgUrl, true)
-            if (pageUrl && lastMemento.search(extensionTabs[activeTabId].mem.aggregatorUrl) == 0) {
-                lastMemento = (extensionTabs[activeTabId].mem.lastMementoUrl.length > 0) 
-                        ? extensionTabs[activeTabId].mem.lastMementoUrl 
+            lastMemento = extensionTabs[tab.id].mem.getTimeGateUrl(orgUrl, true)
+            if (pageUrl && lastMemento.search(extensionTabs[tab.id].mem.aggregatorUrl) == 0 && extensionTabs[tab.id].mem.lastMementoUrl != null) {
+                console.log("last mem url: " + extensionTabs[tab.id].mem.lastMementoUrl)
+                lastMemento = (extensionTabs[tab.id].mem.lastMementoUrl.length > 0) 
+                        ? extensionTabs[tab.id].mem.lastMementoUrl 
                         : lastMemento
             }
             if (!lastMemento) {
                 // do not negotiate
-                extensionTabs[activeTabId].mem.isMementoActive = false
-                extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = false
-                extensionTabs[activeTabId].mem.isDatetimeModified = false
+                extensionTabs[tab.id].mem.isMementoActive = false
+                extensionTabs[tab.id].mem.shouldProcessEmbeddedResources = false
+                extensionTabs[tab.id].mem.isDatetimeModified = false
                 chrome.tabs.update(tab.id, {url: clickedUrl})
                 return
             }
-            window.setTimeout(extensionTabs[activeTabId].mem.clearCache(), 2000)
-            extensionTabs[activeTabId].mem.isMementoActive = true
-            extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = true
-            extensionTabs[activeTabId].mem.isDatetimeModified = false 
-            extensionTabs[activeTabId].mem.specialDatetime = new Date()
+            window.setTimeout(extensionTabs[tab.id].mem.clearCache(), 2000)
+            extensionTabs[tab.id].mem.isMementoActive = true
+            extensionTabs[tab.id].mem.shouldProcessEmbeddedResources = true
+            extensionTabs[tab.id].mem.isDatetimeModified = false 
+            extensionTabs[tab.id].mem.specialDatetime = new Date()
+            console.log("Loading Last: " + tab.id, lastMemento)
             chrome.tabs.update(tab.id, {url: lastMemento})
             return
         }
@@ -529,16 +507,16 @@ Extension.prototype = {
             if (extensionTabs[request.tabId] == undefined) {
                 return
             }
-            for (var i=0, r; r=extensionTabs[activeTabId].requestIds[i]; i++) {
+            for (var i=0, r; r=extensionTabs[request.tabId].requestIds[i]; i++) {
                 if (request.requestId == r) {
                     return
                 }
             }
-            extensionTabs[activeTabId].requestIds.push(request.requestId)
+            extensionTabs[request.tabId].requestIds.push(request.requestId)
 
             // not doing memento for known uris that does not have mementos or
             // does not need memento processing.
-            var whiteList = extensionTabs[activeTabId].mem.getWhiteList()
+            var whiteList = extensionTabs[request.tabId].mem.getWhiteList()
             for (var i=0, r; r=whiteList[i]; i++) {
                 if (request.url.match(r)) {
                     return
@@ -549,7 +527,7 @@ Extension.prototype = {
             * processing embedded resources. 
             */
             if (request.type != "main_frame" 
-                && extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources
+                && extensionTabs[request.tabId].mem.shouldProcessEmbeddedResources
                 && request.url.search("chrome-extension://") < 0) {
 
                     /*
@@ -557,11 +535,11 @@ Extension.prototype = {
                     * the memento with the url of the embedded resource. The 
                     * embedded resources will have the same host if it's rewritten.
                     */
-                    if (request.url.search(extensionTabs[activeTabId].mem.mementoBaseUrl) == 0) {
-                        extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = false
+                    if (request.url.search(extensionTabs[request.tabId].mem.mementoBaseUrl) == 0) {
+                        extensionTabs[request.tabId].mem.shouldProcessEmbeddedResources = false
                         return
                     }
-                    var tgUrl = extensionTabs[activeTabId].mem.getTimeGateUrl(request.url, false)
+                    var tgUrl = extensionTabs[request.tabId].mem.getTimeGateUrl(request.url, false)
                     if (!tgUrl) {
                         // do not neg
                         return
@@ -569,13 +547,13 @@ Extension.prototype = {
                     return {redirectUrl: tgUrl}
             }
             else if (request.type == "main_frame") {
-                extensionTabs[activeTabId].requestIds = []
-                extensionTabs[activeTabId].mem.timegateUrl = false
-                extensionTabs[activeTabId].mem.originalUrl = false
-                extensionTabs[activeTabId].mem.mementoDatetime = false
-                extensionTabs[activeTabId].mem.mementoUrl = false
-                extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = false
-                extensionTabs[activeTabId].mem.lastMementoUrl = false
+                extensionTabs[request.tabId].requestIds = []
+                extensionTabs[request.tabId].mem.timegateUrl = false
+                extensionTabs[request.tabId].mem.originalUrl = false
+                extensionTabs[request.tabId].mem.mementoDatetime = false
+                extensionTabs[request.tabId].mem.mementoUrl = false
+                extensionTabs[request.tabId].mem.shouldProcessEmbeddedResources = false
+                extensionTabs[request.tabId].mem.lastMementoUrl = false
             }
         },
         {urls: ["<all_urls>"]},
@@ -583,19 +561,21 @@ Extension.prototype = {
 
         
         chrome.webRequest.onBeforeSendHeaders.addListener( function(request) {
-            if (extensionTabs[activeTabId].mem.isMementoActive) {
+            if (extensionTabs[request.tabId] == undefined) {
+                return
+            }
+            if (extensionTabs[request.tabId].mem.isMementoActive) {
                 var aDt = {}
                 var splDt = false
-                if (extensionTabs[activeTabId].mem.specialDatetime) {
-                    aDt = extensionTabs[activeTabId].mem.specialDatetime
+                if (extensionTabs[request.tabId].mem.specialDatetime) {
+                    aDt = extensionTabs[request.tabId].mem.specialDatetime
                     splDt = true
                 }
                 else {
-                    aDt = extensionTabs[activeTabId].mem.acceptDatetime
+                    aDt = extensionTabs[request.tabId].mem.acceptDatetime
                 }
                 if (aDt && !splDt) {
-                    console.log(request.url)
-                    extensionTabs[activeTabId].mem.appendAcceptDatetimeHeader(request.requestHeaders, aDt.toGMTString())
+                    extensionTabs[request.tabId].mem.appendAcceptDatetimeHeader(request.requestHeaders, aDt.toGMTString())
                 }
                 return {requestHeaders: request.requestHeaders}
             }
@@ -606,32 +586,19 @@ Extension.prototype = {
         chrome.webRequest.MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES = 100
 
         chrome.webRequest.onHeadersReceived.addListener( function(response) {
-            /*
-            if (response.type == "xmlhttprequest") {
-                console.log(response)
-                for (i in extensionTabs[activeTabId].mem.visitedOriginalUrls) {
-                    if (response.url == i) {
-                        for (var k=0, h; h=response.responseHeaders[k]; k++) {
-                            if (h.name.toLowerCase() == "location") {
-                                extensionTabs[activeTabId].mem.visitedOriginalUrls[i] = h.value
-                                console.log(extensionTabs[activeTabId].mem.visitedOriginalUrls)
-                                return
-                            }
-                        }
-                    }
-                }
+            if (extensionTabs[response.tabId] == undefined) {
+                return
             }
-            */
             if (response.type != "main_frame") {
                 return
             }
             if (response.statusLine.search("HTTP/1.1 30") == 0) {
-                extensionTabs[activeTabId].mem.lastMementoUrl = extensionTabs[activeTabId].mem.getRelUriFromHeaders(response.responseHeaders, "last")    
+                extensionTabs[response.tabId].mem.lastMementoUrl = extensionTabs[response.tabId].mem.getRelUriFromHeaders(response.responseHeaders, "last")    
                 return
             }
 
-            extensionTabs[activeTabId].mem.timegateUrl = extensionTabs[activeTabId].mem.getRelUriFromHeaders(response.responseHeaders, "timegate")
-            extensionTabs[activeTabId].mem.originalUrl = extensionTabs[activeTabId].mem.getRelUriFromHeaders(response.responseHeaders, "original")
+            extensionTabs[response.tabId].mem.timegateUrl = extensionTabs[response.tabId].mem.getRelUriFromHeaders(response.responseHeaders, "timegate")
+            extensionTabs[response.tabId].mem.originalUrl = extensionTabs[response.tabId].mem.getRelUriFromHeaders(response.responseHeaders, "original")
 
             /* 
             * checking if this is a native memento resource
@@ -639,26 +606,26 @@ Extension.prototype = {
             */
             for (var i=0, h; h=response.responseHeaders[i]; i++) {
                 if (h.name.toLowerCase() == "memento-datetime") {
-                    extensionTabs[activeTabId].mem.mementoDatetime = h.value
-                    extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = true
-                    extensionTabs[activeTabId].mem.isMementoActive = true
-                    extensionTabs[activeTabId].mem.mementoUrl = response.url
-                    extensionTabs[activeTabId].mem.visitedUrls[extensionTabs[activeTabId].mem.mementoUrl] = extensionTabs[activeTabId].mem.originalUrl
+                    extensionTabs[response.tabId].mem.mementoDatetime = h.value
+                    extensionTabs[response.tabId].mem.shouldProcessEmbeddedResources = true
+                    extensionTabs[response.tabId].mem.isMementoActive = true
+                    extensionTabs[response.tabId].mem.mementoUrl = response.url
+                    extensionTabs[response.tabId].mem.visitedUrls[extensionTabs[response.tabId].mem.mementoUrl] = extensionTabs[response.tabId].mem.originalUrl
                     /* 
                     * setting base url of the memento
                     * will be used to determine if the embedded resources are processed.
                     */
                     var protocol = ""
-                    if (extensionTabs[activeTabId].mem.mementoUrl.slice(0,7) == "http://") {
+                    if (extensionTabs[response.tabId].mem.mementoUrl.slice(0,7) == "http://") {
                         protocol = "http://"
                     }
-                    else if (extensionTabs[activeTabId].mem.mementoUrl.slice(0,8) == "https://") {
+                    else if (extensionTabs[response.tabId].mem.mementoUrl.slice(0,8) == "https://") {
                         protocol = "https://"
                     }
-                    baseUrl = extensionTabs[activeTabId].mem.mementoUrl.replace(protocol, "")
-                    extensionTabs[activeTabId].mem.mementoBaseUrl = protocol + baseUrl.split("/")[0]
+                    baseUrl = extensionTabs[response.tabId].mem.mementoUrl.replace(protocol, "")
+                    extensionTabs[response.tabId].mem.mementoBaseUrl = protocol + baseUrl.split("/")[0]
 
-                    extensionTabs[activeTabId].mem.update()
+                    extensionTabs[response.tabId].mem.update()
                     return
                 }
             }
@@ -667,27 +634,30 @@ Extension.prototype = {
             * checking for non-native memento resources. 
             * setting psuedo memento datetime header
             */
-            if (extensionTabs[activeTabId].mem.isMementoActive && extensionTabs[activeTabId].mem.isPsuedoMemento) {
+            if (extensionTabs[response.tabId].mem.isMementoActive && extensionTabs[response.tabId].mem.isPsuedoMemento) {
                 var aDt = ""
-                if (extensionTabs[activeTabId].mem.specialDatetime) {
-                    aDt = extensionTabs[activeTabId].mem.specialDatetime
+                if (extensionTabs[response.tabId].mem.specialDatetime) {
+                    aDt = extensionTabs[response.tabId].mem.specialDatetime
                 }
                 else {
-                    aDt = extensionTabs[activeTabId].mem.acceptDatetime
+                    aDt = extensionTabs[response.tabId].mem.acceptDatetime
                 }
                 if (aDt) {
-                    extensionTabs[activeTabId].mem.mementoDatetime = aDt.toGMTString()
+                    extensionTabs[response.tabId].mem.mementoDatetime = aDt.toGMTString()
                 }
-                extensionTabs[activeTabId].mem.shouldProcessEmbeddedResources = false
-                extensionTabs[activeTabId].mem.mementoUrl = response.url
-                extensionTabs[activeTabId].mem.visitedUrls[extensionTabs[activeTabId].mem.mementoUrl] = extensionTabs[activeTabId].mem.clickedOriginalUrl
+                extensionTabs[response.tabId].mem.shouldProcessEmbeddedResources = false
+                extensionTabs[response.tabId].mem.mementoUrl = response.url
+                extensionTabs[response.tabId].mem.visitedUrls[extensionTabs[response.tabId].mem.mementoUrl] = extensionTabs[response.tabId].mem.clickedOriginalUrl
             }
-            extensionTabs[activeTabId].mem.update()
+            extensionTabs[response.tabId].mem.update()
         },
         {urls: ["<all_urls>"]},
         ["responseHeaders"])
 
         chrome.webNavigation.onCommitted.addListener( function(details) {
+            if (extensionTabs[details.tabId] == undefined) {
+                return
+            }
             if (details.transitionQualifiers == "forward_back" || 
                 details.transitionQualifiers == "from_address_bar" || 
                 details.transitionType == "typed" ||
@@ -695,25 +665,32 @@ Extension.prototype = {
                 
                 var isVisitedMementoUrl = false
 
-                for (i in extensionTabs[activeTabId].mem.visitedUrls) {
+                for (i in extensionTabs[details.tabId].mem.visitedUrls) {
                     if (i == details.url) {
                         isVisitedMementoUrl = true
-                        extensionTabs[activeTabId].mem.isMementoActive = true
+                        extensionTabs[details.tabId].mem.isMementoActive = true
                     }
                 }
                 if (!isVisitedMementoUrl) {
-                    extensionTabs[activeTabId].mem.isMementoActive = false
+                    extensionTabs[details.tabId].mem.isMementoActive = false
                 }
-                extensionTabs[activeTabId].mem.update()
+                extensionTabs[details.tabId].mem.update()
             }
             else if (details.transitionType == "reload") {
-                extensionTabs[activeTabId].mem.clearCache()
+                extensionTabs[details.tabId].mem.clearCache()
             }
         })
 
         chrome.webRequest.onCompleted.addListener( function(details) {
-            if (extensionTabs[activeTabId].mem.isPsuedoMemento && details.type == "main_frame" && (details.statusCode < 300 || details.statusCode > 399)) {
-                extensionTabs[activeTabId].mem.isPsuedoMemento = false
+            if (extensionTabs[details.tabId] == undefined) {
+                return
+            }
+            if (extensionTabs[details.tabId].mem.isPsuedoMemento && details.type == "main_frame" && (details.statusCode < 300 || details.statusCode > 399)) {
+                extensionTabs[details.tabId].mem.isPsuedoMemento = false
+            }
+
+            if (extensionTabs[details.tabId].mem.specialDatetime && details.type == "main_frame" && (details.statusCode < 300 || details.statusCode > 399)) {
+                extensionTabs[details.tabId].mem.specialDatetime = false
             }
         },
         {urls: ["<all_urls>"]})

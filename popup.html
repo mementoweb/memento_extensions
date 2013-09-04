@@ -2,13 +2,14 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>Memento Date-Time Picker</title>
         <link rel="stylesheet" href="jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
         <style>
             body {
-                min-width: 300px;
+                min-width: 250px;
                 min-height: 350px;
                 overflow-x: hidden;
+                font-family: Verdana,Arial,sans-serif;
+                font-size: 0.9em;
             }
         </style>
         <script src="jquery-ui/js/jquery-1.9.1.js"></script>
@@ -17,12 +18,15 @@
         <script src="menu.js"></script>
     </head>
     <body>
-        <h3>Memento</h3>
-        <p>Select a date in the past to enable time travel.
         <p>
-            <span>Date: <input type="text" id="datepicker" /></span>
-            <span>Time: <input type="text" id="timepicker" size="10" value="00:00:00" /></span>
+            <span>Date: <input type="text" id="dateBox" size="10" /></span>
+            <span>Time: <input type="text" id="timeBox" size="10" value="00:00:00" /></span>
         </p>
-        <div id="savedMessage" />
+        <div id="datepicker" style="font-size: .9em;"></div> 
+        <p>Select a date for time travel. Right click on the page or on links to travel through time.</p>
+        <div style="text-align: center; font-size: 0.9em;">
+            <button id="setDatetime">Set</button>
+            <button id="cancelDatetime">Cancel</button>
+        <div>
     </body>
 </html>
