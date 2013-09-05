@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" href="jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
+        <link rel="stylesheet" href="lib/jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
         <style>
             body {
                 min-width: 250px;
@@ -12,21 +12,21 @@
                 font-size: 0.9em;
             }
         </style>
-        <script src="jquery-ui/js/jquery-1.9.1.js"></script>
-        <script src="jquery-ui/js/jquery-ui-1.10.3.custom.min.js"></script>
+        <script src="lib/jquery-ui/js/jquery-1.9.1.js"></script>
+        <script src="lib/jquery-ui/js/jquery-ui-1.10.3.custom.min.js"></script>
         <script src="popup.js"></script>
         <script src="menu.js"></script>
     </head>
     <body>
         <p>
-            <span>Date: <input type="text" id="dateBox" size="10" /></span>
-            <span>Time: <input type="text" id="timeBox" size="10" value="00:00:00" /></span>
+            <span id="dateText"></span><input type="text" id="dateBox" size="10" />
+            <span id="timeText"></span><input type="text" id="timeBox" size="10" value="00:00:00" />
         </p>
         <div id="datepicker" style="font-size: .9em;"></div> 
-        <p>Select a date for time travel. Right click on the page or on links to travel through time.</p>
+        <p id="descriptionText"></p>
         <div style="text-align: center; font-size: 0.9em;">
-            <button id="setDatetime">Set</button>
-            <button id="cancelDatetime">Cancel</button>
+            <button id="setDatetime"></button>
+            <button id="cancelDatetime"></button>
         <div>
     </body>
 </html>

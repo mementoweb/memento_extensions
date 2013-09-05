@@ -1,0 +1,69 @@
+{
+    "extensionName": {
+        "message": "Memento",
+        "description": "Extension name"
+    },
+    "extensionDescription": {
+        "message": "This extension enables time travel. Right click on the page or on links to travel through time.",
+        "descripiton": "Extension description"
+    },
+    "popupDateText": {
+        "message": "Date",
+        "description": "Label for the date input field"
+    },
+    "popupTimeText": {
+        "message": "Time",
+        "description": "Label for the time input field"
+    },
+    "popupDescriptionText": {
+        "message": "Select a date for time travel. Right click on the page or on links to travel through time.",
+        "description": "Small description text for extension usage"
+    },
+    "popupSetDatetime": {
+        "message": "Set",
+        "description": "Label for the set datetime button"
+    },
+    "popupCancelDatetime": {
+        "message": "Cancel",
+        "description": "Label for the cancel datetime button"
+    },
+    "menuInitDatetimeTitle": {
+        "message": "Click Memento icon to select date-time",
+        "description": "Title text for the last memento menu option."
+    },
+    "menuGetNearDatetimeTitle": {
+        "message": "Get near $datetime$",
+        "description": "Title text to get the resource near the set datetime in menu",
+        "placeholders": {
+            "datetime": {
+                "content": "$1"
+            }
+        }
+    },
+    "menuGetNearCurrentTitle": {
+        "message": "Get near current time",
+        "description": "Title text for the last memento menu option."
+    },
+    "menuGotUnknownDateTitle": {
+        "message": "Got unknown date: Memento-Datetime not provided",
+        "description": "Title text for to display non-native memento datetime."
+    },
+    "menuGetCurrentTitle": {
+        "message": "Get current time",
+        "description": "Title text to get the original resource in the menu."
+    },
+    "menuGotCurrentTitle": {
+        "message": "Got: current",
+        "description": "Title text to display that the received resource is an original."
+    },
+    "menuGotMementoDatetimeTitle": {
+        "message": "Got: $datetime$",
+        "description": "Title text to display the received memento-datetime",
+        "placeholders": {
+            "datetime": {
+                "content": "$1"
+            }
+        }
+    }
+
+}

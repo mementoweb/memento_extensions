@@ -29,7 +29,12 @@ chrome.storage.local.get("accept-datetime-readable", function(items) {
 
 $(function() {
     
+    $( "#dateText" ).append(chrome.i18n.getMessage("popupDateText") + ": ")
+    $( "#timeText" ).append(chrome.i18n.getMessage("popupTimeText") + ": ")
+    $( "#descriptionText" ).append(chrome.i18n.getMessage("popupDescriptionText") + ": ")
+
     $( "#setDatetime" )
+        .append(chrome.i18n.getMessage("popupSetDatetime"))
         .button()
         .click( function (event) {
             event.preventDefault()
@@ -40,6 +45,7 @@ $(function() {
         });
 
     $( "#cancelDatetime" )
+        .append(chrome.i18n.getMessage("popupCancelDatetime"))
         .button()
         .click( function (event) {
             event.preventDefault()

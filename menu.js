@@ -4,6 +4,7 @@ Memento.prototype = {
     shouldProcessEmbeddedResources: false,
     isMementoActive: false,
     mementoDatetime: false,
+    requestDatetime: false,
     acceptDatetime: false,
     timegateUrl: false,
     originalUrl: false,
@@ -137,7 +138,7 @@ Memento.prototype = {
     getHeader: function(headers, headerName) {
         if (typeof(headers) == "object") {
             for (var i=0, h; h=headers[i]; i++) {
-                if (h.name.toLowerCase() == headerName) {
+                if (h.name.toLowerCase() == headerName.toLowerCase()) {
                     return h.value
                 }
             }
@@ -146,7 +147,7 @@ Memento.prototype = {
             var headerLines = headers.split("\n")
             for (header in headerLines) {
                 var linkParts = headerLines[header].split(':')
-                if (linkParts[0].trim().toLowerCase() == headerName) {
+                if (linkParts[0].trim().toLowerCase() == headerName.toLowerCase()) {
                     return linkParts.slice(1, linkParts.length).join(":")
                 }
             }
@@ -227,17 +228,17 @@ Memento.prototype = {
             if (c == "page") {
                 t.push(c)
                 // SELECTED MEMENTO DATETIME
-                title = "Get near " + this.acceptDatetime.toGMTString()
+                title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", this.acceptDatetime.toGMTString())
                 enabled = true
                 this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // LAST MEMENTO
-                title = "Get near current time"
+                title = chrome.i18n.getMessage("menuGetNearCurrentTitle")
                 enabled = true
                 this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // CURRENT TIME
-                var title = "Get at current time"
+                title = chrome.i18n.getMessage("menuGetCurrentTitle")
                 var enabled = false
                 if (this.mementoDatetime || this.datetimeModified) {
                     enabled = true
@@ -247,11 +248,14 @@ Memento.prototype = {
                 // MEMENTO DATETIME
                 chrome.contextMenus.create({"type": "separator", "contexts": [c]})
                 var title = ""
-                if (this.mementoDatetime) {
-                    title = "Got: " + this.mementoDatetime
+                if (this.mementoDatetime && this.mementoDatetime == this.requestDatetime.toGMTString()) {
+                    title = chrome.i18n.getMessage("menuGotUnknownDateTitle")
+                }
+                else if (this.mementoDatetime) {
+                    title = chrome.i18n.getMessage("menuGotMementoDatetimeTitle", this.mementoDatetime)
                 }
                 else {
-                    title = "Got: current"
+                    title = chrome.i18n.getMessage("menuGotCurrentTitle")
                 }
                 var enabled = false
                 this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled))
@@ -260,17 +264,17 @@ Memento.prototype = {
             else if (c == "link") {
                 // SELECTED MEMENTO DATETIME
                 t.push(c)
-                title = "Get near " + this.acceptDatetime.toGMTString()
+                title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", this.acceptDatetime.toGMTString())
                 enabled = true
                 this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // LAST MEMENTO
-                title = "Get near current time"
+                title = chrome.i18n.getMessage("menuGetNearCurrentTitle")
                 enabled = true
                 this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // CURRENT TIME
-                var title = "Get at current time"
+                title = chrome.i18n.getMessage("menuGetCurrentTitle")
                 var enabled = false
                 if (this.mementoDatetime) {
                     enabled = true
@@ -357,7 +361,8 @@ Memento.prototype = {
     },
 
     init: function() {
-        title = "Click Memento icon to select date-time"
+        //title = "Click Memento icon to select date-time"
+        var title = chrome.i18n.getMessage("menuInitDatetimeTitle")
         this.menuId = chrome.contextMenus.create({
             "title": title,
             "contexts": Memento.contexts,
@@ -444,7 +449,6 @@ Extension.prototype = {
 
             tgUrl = extensionTabs[tab.id].mem.getTimeGateUrl(orgUrl, true)
             if (pageUrl && tgUrl.search(extensionTabs[tab.id].mem.aggregatorUrl) == 0 && extensionTabs[tab.id].mem.timegateUrl != null) {
-                console.log(extensionTabs[tab.id].mem.timegateUrl)
                 tgUrl = (extensionTabs[tab.id].mem.timegateUrl.length > 0) 
                         ? extensionTabs[tab.id].mem.timegateUrl 
                         : tgUrl
@@ -554,6 +558,7 @@ Extension.prototype = {
                 extensionTabs[request.tabId].mem.mementoUrl = false
                 extensionTabs[request.tabId].mem.shouldProcessEmbeddedResources = false
                 extensionTabs[request.tabId].mem.lastMementoUrl = false
+                extensionTabs[request.tabId].mem.requestDatetime = false
             }
         },
         {urls: ["<all_urls>"]},
@@ -574,8 +579,9 @@ Extension.prototype = {
                 else {
                     aDt = extensionTabs[request.tabId].mem.acceptDatetime
                 }
-                if (aDt && !splDt) {
+                if (aDt) {
                     extensionTabs[request.tabId].mem.appendAcceptDatetimeHeader(request.requestHeaders, aDt.toGMTString())
+                    extensionTabs[request.tabId].mem.requestDatetime = aDt
                 }
                 return {requestHeaders: request.requestHeaders}
             }

@@ -1,7 +1,8 @@
 {
     "manifest_version": 2,
-    "name": "Memento",
-    "description": "This extension enables browsing past versions of a resource through a browser context menu.",
+    "name": "__MSG_extensionName__",
+    "default_locale": "en",
+    "description": "__MSG_extensionDescription__",
     "version": "0.1",
 
     "permissions": [
@@ -19,7 +20,7 @@
     "background": {
         "scripts": [
             "menu.js",
-            "jquery-ui/js/jquery-1.9.1.js"
+            "lib/jquery-ui/js/jquery-1.9.1.js"
         ]
     },
 
@@ -33,15 +34,18 @@
     */
 
     "browser_action": {
-        "default_icon": "memento.png",
+        "default_icon": "img/memento.png",
         "default_title": "Memento",
         "default_popup": "popup.html"
     },
     
+    /*
     "devtools_page": "devtools.html",
-    
-    "icons": {
-        "16": "memento-16x16.png"
-    }
+    */
 
+    "icons": {
+        "16": "img/memento-16x16.png",
+        "48": "img/memento-48x48.png",
+        "128": "img/memento-128x128.png"
+    }
 }
