@@ -16,7 +16,7 @@
         "description": "Label for the time input field"
     },
     "popupDescriptionText": {
-        "message": "Select a date for time travel. Right click on the page or on links to travel through time.",
+        "message": "Select a date for time travel (in GMT). Right click on the page or on links to travel through time.",
         "description": "Small description text for extension usage"
     },
     "popupSetDatetime": {
@@ -28,7 +28,7 @@
         "description": "Label for the cancel datetime button"
     },
     "menuInitDatetimeTitle": {
-        "message": "Click Memento icon to select date-time",
+        "message": "Select a date for time travel...",
         "description": "Title text for the last memento menu option."
     },
     "menuGetNearDatetimeTitle": {
@@ -49,7 +49,7 @@
         "description": "Title text for to display non-native memento datetime."
     },
     "menuGetCurrentTitle": {
-        "message": "Get current time",
+        "message": "Get at current time",
         "description": "Title text to get the original resource in the menu."
     },
     "menuGotCurrentTitle": {
