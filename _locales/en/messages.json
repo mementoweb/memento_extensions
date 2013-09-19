@@ -4,7 +4,8 @@
         "description": "Extension name"
     },
     "extensionDescription": {
-        "message": "This extension enables time travel. Right click on the page or on links to travel through time.",
+        //"message": "This extension enables time travel. Right click on the page or on links to travel through time.",
+        "message": "Travel to the past of the web by right-clicking pages and links.",
         "descripiton": "Extension description"
     },
     "popupDateText": {
@@ -27,6 +28,7 @@
         "message": "Cancel",
         "description": "Label for the cancel datetime button"
     },
+
     "menuInitDatetimeTitle": {
         "message": "Select a date for time travel...",
         "description": "Title text for the last memento menu option."
@@ -64,6 +66,38 @@
                 "content": "$1"
             }
         }
-    }
+    },
 
+    "optionsTitle": {
+        "message": "Memento Preferences",
+        "description": "The title for the options pane."
+    },
+    "optionsArchiveDescription": {
+        "message": "In many cases, web pages do not provide information about the web archive that should be used to gain access to their history. The Memento extension allows selecting a default web archive to use in those cases:<br/><br/><b>* Memento Aggregator:</b> When selecting this option, page history available in several web archives is taken into account. This option improves the chances to retrieve an archived page that is close to the selected time travel date. It is the recommended option.<br/><b>* Specific Archive:</b> When selecting this option, only page history available in the chosen archive is taken into account.<br/><br/>",
+        "description": "This is the text that explains the individual archive choices"
+    },
+    "optionsCurrentlyUsedArchiveTitle": {
+        "message": "Web Archive currently in use:",
+        "description": "Title that mentions the currently chosen web archive"
+    },
+    "optionsCurrentlyUsedArchiveUrl": {
+        "message": "<b>$archiveName$</b> with TimeGate at baseURI <i>$archiveBaseUri$</i>",
+        "description": "The text that displays the archive name and it's base uri",
+        "placeholders": {
+            "archiveName": {
+                "content": "$1"
+            },
+            "archiveBaseUri": {
+                "content": "$2"
+            }
+        }
+    },
+    "optionsSelectArchiveTitle": {
+        "message": "Select the web archive you would like to include:",
+        "description": "Title that mentions the text to choose a web archive"
+    },
+    "optionsUpdateButtonText": {
+        "message": "Update",
+        "description": "The text for the update archive selection button"
+    }
 }
