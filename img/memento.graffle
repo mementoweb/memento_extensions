@@ -26,7 +26,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2013-09-17 18:02:31 +0000</string>
+	<string>2013-09-25 21:52:07 +0000</string>
 	<key>Modifier</key>
 	<string>Harihar Shankar</string>
 	<key>NotesVisible</key>
@@ -2267,7 +2267,87 @@
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{120, 89}, {152, 152}}</string>
+					<string>{{85, 26}, {152, 152}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>229</integer>
+					<key>Shape</key>
+					<string>pdfImport-26.3</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0.8</string>
+								<key>g</key>
+								<string>0.8</string>
+								<key>r</key>
+								<string>0.8</string>
+							</dict>
+						</dict>
+						<key>image fill</key>
+						<dict>
+							<key>ImageSizing</key>
+							<integer>0</integer>
+							<key>Offset</key>
+							<string>{-0.30221799999999999, 0.021572600000000001}</string>
+							<key>Scale</key>
+							<real>3.242192268371582</real>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>CornerRadius</key>
+							<real>50</real>
+							<key>Width</key>
+							<real>2</real>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{92.271000000000015, 33.270999999999958}, {137.45699999999999, 137.45699999999999}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>228</integer>
+					<key>Rotation</key>
+					<real>270</real>
+					<key>Shape</key>
+					<string>Circle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0.2</string>
+								<key>g</key>
+								<string>0.2</string>
+								<key>r</key>
+								<string>0.2</string>
+							</dict>
+							<key>MiddleFraction</key>
+							<real>0.10317456722259521</real>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{132.00000762939453, 268}, {156.24000549316406, 152}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>ID</key>
@@ -2313,7 +2393,7 @@
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{127.27100000000002, 96.270999999999987}, {137.45699999999999, 137.45699999999999}}</string>
+					<string>{{141, 276.27151489257812}, {140, 136.80000305175781}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>ID</key>
@@ -3099,7 +3179,7 @@
 	<key>WindowInfo</key>
 	<dict>
 		<key>CurrentSheet</key>
-		<integer>5</integer>
+		<integer>4</integer>
 		<key>ExpandedCanvases</key>
 		<array/>
 		<key>Frame</key>

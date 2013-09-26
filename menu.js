@@ -1,3 +1,22 @@
+/*
+Copyright 2013 Harihar Shankar, Herbert Van de Sompel, 
+Martin Klein, Robert Sanderson, Lyudmila Balakireva
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+
+
 function MementoHttpRequest() {}
 
 MementoHttpRequest.prototype = {
@@ -32,6 +51,8 @@ Memento.prototype = {
     wikipediaMementoBaseRE: new RegExp("[a-z]{0,2}\.wikipedia.org/w/index.php"),
     wikipediaOldIdRE: new RegExp("[?&]oldid=[0-9]+(&|$)"),
     wikipediaTitleRE: new RegExp('[?|&]title=' + '([^&;]+?)(&|#|;|$)'),
+    googleSearchURLRE: new RegExp("(http|https)://www.google(.co)?.[a-z]{2,3}/url"),
+    yahooSearchURLRE: new RegExp("search.yahoo.com"),
     shouldProcessEmbeddedResources: false,
     isMementoActive: false,
     mementoDatetime: false,
@@ -93,7 +114,9 @@ Memento.prototype = {
                 // Now d is the first non space character, and should be either , or ;
                 if (d == ',' || d ==';'){
                     // We're okay
-                    links[uri] = {};
+                    if (!links[uri]) {
+                        links[uri] = {};
+                    }
                     state = "paramstart";
                 } else{
                 	// stay in state uri, and continue to append
@@ -371,15 +394,18 @@ Memento.prototype = {
         var o = callback
         var Request = MementoHttpRequest.bind(o)
         var r = new Request()
-         r.doHttp(reqUrl, this.calendarDatetime, false, function(orgHeadResponse) {
+        r.doHttp(reqUrl, this.calendarDatetime, false, function(orgHeadResponse) {
             callback(orgHeadResponse.getAllResponseHeaders())
         })
     },
 
     processTimeGateUrl: function(orgUrl, tgHeadResponse, isTopLevelResource) {
         var tgUrl
-        if (this.getHeader(tgHeadResponse, "Memento-Datetime")) {
-            tgUrl = orgUrl
+        if (this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
+            var contentLocation = this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Content-Location")
+            if (contentLocation) {
+                tgUrl = contentLocation
+            }
         }
         else {
             tgUrl = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
@@ -472,12 +498,10 @@ Memento.prototype = {
     },
 
     filterSearchResultUrl: function(url) {
-        if (url.search("http://search.yahoo.com") == 0) {
+        if (url.search(this.yahooSearchURLRE) >= 0) {
             url = unescape(url.split("**")[1])
         }
-        else if (url.search("https://www.google.com/url") == 0 
-            || url.search("http://www.google.com/url") == 0) {
-
+        else if (url.search(this.googleSearchURLRE) >= 0) {
             url = this.getUrlParameter(url, "url")
         }
         return url

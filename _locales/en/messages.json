@@ -4,7 +4,6 @@
         "description": "Extension name"
     },
     "extensionDescription": {
-        //"message": "This extension enables time travel. Right click on the page or on links to travel through time.",
         "message": "Travel to the past of the web by right-clicking pages and links.",
         "descripiton": "Extension description"
     },
