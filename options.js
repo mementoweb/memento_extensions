@@ -45,6 +45,7 @@ chrome.storage.local.get(null, function(items) {
 
     //var result = $( "#savedMementoTimeGate" ).empty();
     //result.append( "<b>"+selectedArchive[0].textContent + "</b> with TimeGates at baseURI <i>" + mementoTimeGateUrlList[index] + "</i></br>");
+    $("#optionsCurrentlyUsedArchiveUrl").empty()
     $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [selectedArchive[0].textContent, mementoTimeGateUrlList[index]]))
     
 })
@@ -69,6 +70,7 @@ $(function() {
             //var result = $( "#savedMementoTimeGate" ).empty();
             $( "#selectable .ui-selected" ).each(function() {
                 var index = $( "#selectable li" ).index( this );
+                $("#optionsCurrentlyUsedArchiveUrl").empty()
                 $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [this.innerHTML, mementoTimeGateUrlList[index]]))
                 //result.append( "<b>"+this.innerHTML + "</b> with TimeGates at baseURI <i>" + mementoTimeGateUrlList[index] + "</i></br>");
                 chrome.storage.local.set({'mementoTimeGateUrl': mementoTimeGateUrlList[index]})
