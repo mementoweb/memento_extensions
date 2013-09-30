@@ -1,28 +1,47 @@
-/*
-Copyright 2013 Harihar Shankar, Herbert Van de Sompel, 
-Martin Klein, Robert Sanderson, Lyudmila Balakireva
+/**
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ * This file is part of the extension Memento for Chrome.
+ * http://mementoweb.org
 
-http://www.apache.org/licenses/LICENSE-2.0
+ * Copyright 2013,
+ * Harihar Shankar, Herbert Van de Sompel, 
+ * Martin Klein, Robert Sanderson, Lyudmila Balakireva
+ * -- Los Alamos National Laboratory. 
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ * Licensed under the BSD open source software license.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
 
-*/
+ * http://mementoweb.github.io/SiteStory/license.html
 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/** 
+ * MementoHttpRequest implements aynchronous ajax requests.
+ * Uses jQuery ajax functions.
+ */
 
 function MementoHttpRequest() {}
 
 MementoHttpRequest.prototype = {
-    doHttp: function(uri, calendarDatetime, setAcceptDatetime, callback) {
+
+    /**
+     * This function wraps the jQuery ajax method. The Accept-Datetime header
+     * can be optionally set.
+     * @param: uri: the uri to request
+     * @param: calendarDatetime: the accept-datetime to set.
+     * @param: callback: the callback function to execute on response received. 
+     */
+
+    doHttp: function(uri, calendarDatetime, callback) {
         var hdrs = {}
-        if (setAcceptDatetime) {
+        if (this.calendarDatetime) {
+        //if (setAcceptDatetime) {
             hdrs = {'Accept-Datetime': calendarDatetime.toGMTString()}
         }
         $.ajax({
@@ -41,9 +60,20 @@ MementoHttpRequest.prototype = {
     },
 }
 
+/**
+ * Memento implements the Memento algorithm.
+ * There are kludges here to extend support for archives that do not
+ * natively support memento yet. 
+ * The memento algorithm can be found at doc/memento_algorithm.txt file.
+ * The handling of the menu and it's various states are also done here. 
+ * TODO: decouple menu handling from the memento algorithm. 
+ */
+
+function Memento() {
+}
+
 Memento.prototype = {
 
-    tabId: 0,
     aggregatorUrl: "http://mementoproxy.lanl.gov/aggr/timegate/",
     //wikipediaTimegate: "http://mementoproxy.lanl.gov/wiki/timegate/",
     wikipediaTemplateUrl: ".wikipedia.org/wiki/",
@@ -77,9 +107,14 @@ Memento.prototype = {
     mementoMenuIds: [],
     lastMementoMenuIds: [],
     mementoDatetimeMenuIds: [],
-    //visitedOriginalUrls: {},
 
 
+    /**
+     * Parses link headers and returns an object. The link header is 
+     * processed character by character.
+     * @param: link: the link header as a string. 
+     * @return: object: links[uri][rel] = relValue 
+     */
 
     parseLinkHeader : function(link) {
         var state = 'start';
@@ -173,6 +208,13 @@ Memento.prototype = {
         return links;
     },
 
+    /**
+     * Returns the uri for the rel type requested.
+     * @param: lhash: the object returned from parseLinkHeader method.
+     * @param: rel: the rel type requested.
+     * @return: the matched uri or null on no match.
+     */
+
     getUriForRel : function(lhash, rel) {
     	for (var uri in lhash) {
         	params = lhash[uri];
@@ -187,6 +229,15 @@ Memento.prototype = {
         }
         return null;
     },
+
+    /**
+     * Given a header name, this method returns the http header value.
+     * The headers can be either an object of key value pairs,
+     * or a string.
+     * @param: headers: the http headers
+     * @param: headerName: the requested header name
+     * @return: the value of the header or false if none found.
+     */
 
     getHeader: function(headers, headerName) {
         if (typeof(headers) == "object") {
@@ -208,6 +259,14 @@ Memento.prototype = {
         return false
     },
 
+    /**
+     * A wrapper function that gets the link headers, parses it, 
+     * and returns the uri for the rel type asked. 
+     * @param: headers: the http response headers.
+     * @param: the rel type to look for in the link header. 
+     * @return: the url for the rel type.
+     */
+
     getRelUriFromHeaders: function(headers, rel) {
         var linkHeader = this.getHeader(headers, "link")
         var relUrl = false
@@ -217,6 +276,16 @@ Memento.prototype = {
         }
         return relUrl
     },
+
+    /** 
+     * This is for synchrous ajax requests. Used only when processing mementos for
+     * embedded resources. 
+     * TODO: re-write the handlers to process async requests and remove this function.
+     * @param: uri: the request url
+     * @param: method: the request http method
+     * @param: setAcceptDatetime: the optional accept-datetime to set
+     * @return: jqXHR: the jquery ajax object.
+     */
 
     ajax: function(uri, method, setAcceptDatetime) {
         var hdrs = {}
@@ -243,6 +312,11 @@ Memento.prototype = {
         return t
     },
 
+    /**
+     * A function to append accept-datetime header to request headers. 
+     * @param: headers: the original request headers
+     * @param: datetime: the accept-datetime value to append
+     */
     appendAcceptDatetimeHeader: function(headers, datetime) {
         for (var i=0, h; h=headers[i]; i++) {
             if (h['name'].toLowerCase() == "accept-datetime") {
@@ -253,6 +327,10 @@ Memento.prototype = {
         headers.push({"name": "Accept-Datetime", "value": datetime}) 
     },
 
+    /**
+     * A list of uris or uri regex patters to not do memento on. 
+     * @return: an array of uris and patterns. 
+     */
     getWhiteList: function() {
         uriWhitelist = [];
         uriWhitelist.push(new RegExp('google-analytics\\.com')); // everywhere, just ignore
@@ -260,9 +338,24 @@ Memento.prototype = {
         return uriWhitelist;
     },
 
+    /**
+     * This clears chrome's in-memory cache. Chrome has a caching mechanism 
+     * that does not seem to honor accept-datetime requests. The Memento algorithm
+     * cannot be implemented without clearing the cache before making a memento request. 
+     */
+
     clearCache: function() {
         chrome.webRequest.handlerBehaviorChanged()
     },
+
+    /**
+     * Creates the context menu on right click. 
+     * @param: title: the text to be displayed in the menu.
+     * @param: context: the context in which to display the menu
+     * @param: enabled: toggle to enable the menu
+     * @param: targetUrl: url patterns for this menu to appear.
+     * @return: the id of the created menu.
+     */
 
     createContextMenuEntry: function(title, context, enabled, targetUrl) {
         if (targetUrl == undefined || targetUrl == null) 
@@ -278,6 +371,9 @@ Memento.prototype = {
         return id
     },
 
+    /**
+     * Updates the menu items based on the resource loaded: a memento or an original.
+     */
     updateContextMenu: function() {
         var title = ""
 
@@ -341,6 +437,10 @@ Memento.prototype = {
         }
     },
 
+    /**
+     * Updates the menus and the icons depending on the loaded resource 
+     * type.
+     */
     updateUI: function() {
         chrome.contextMenus.removeAll()
         if (!this.calendarDatetime) {
@@ -361,6 +461,15 @@ Memento.prototype = {
         }
     },
 
+    /**
+     * Given any url, this method returns the original url of that resource.
+     * A HEAD is performed on the resource and the original rel type url is  
+     * returned for memento supported resources.
+     * Wikipedia is handled as a special case where the presence of oldid determines 
+     * the type of resource. All other non-memento supported resources are assumed to be original.
+     * @param: reqUrl: the requested url
+     * @param: orgHeadResponse: the response headers from the HEAD on the resource.  
+     */
     processOriginalUrl: function (reqUrl, orgHeadResponse) {
         var orgUrl = this.getRelUriFromHeaders(orgHeadResponse, "original")
         if (!orgUrl) {
@@ -390,15 +499,31 @@ Memento.prototype = {
         return orgUrl
     },
 
+    /**
+     * The HEAD to determine the original resource is made here.
+     * The processing of the resoponse is handled be the processOriginalUrl 
+     * method.
+     * @param: reqUrl: the request url
+     * @param: the callback to execute on response received.
+     */
     getOriginalUrl: function(reqUrl, callback) {
         var o = callback
         var Request = MementoHttpRequest.bind(o)
         var r = new Request()
-        r.doHttp(reqUrl, this.calendarDatetime, false, function(orgHeadResponse) {
+        r.doHttp(reqUrl, false, function(orgHeadResponse) {
             callback(orgHeadResponse.getAllResponseHeaders())
         })
     },
 
+    /** 
+     * Determines the timegate url for the given resource. The logic is similar 
+     * to processOriginalUrl.
+     * @param: orgUrl: the url of the original resource
+     * @param: tgHeadResponse: the reponse headers from the HEAD request on the original
+     * @param: isTopLevelResource: if this resource is a top level resource. Helps set the 
+     * flags for non-native memento handling.
+     * @return: timegate url
+     */
     processTimeGateUrl: function(orgUrl, tgHeadResponse, isTopLevelResource) {
         var tgUrl
         if (this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
@@ -425,6 +550,11 @@ Memento.prototype = {
         return tgUrl
     },
 
+    /**
+     * The method does the HEAD on the original resource to get the link headers.
+     * @param: orgUrl: the original url
+     * @param: callback: the callback function to execute.
+     */
     getTimeGateUrl: function(orgUrl, callback) {
         var tgUrl = ""
         this.isMementoActive = true
@@ -441,11 +571,17 @@ Memento.prototype = {
         var Request = MementoHttpRequest.bind(callback)
         var r = new Request()
 
-        r.doHttp(orgUrl, this.calendarDatetime, true, function(tgHeadResponse) {
+        r.doHttp(orgUrl, this.calendarDatetime, function(tgHeadResponse) {
             callback(tgHeadResponse)
         })
     },
 
+    /** 
+     * Similar to getTimeGateUrl, but performs synchronous ajax requests. 
+     * @param: orgUrl: the original url
+     * @param: isTopLevelResource: if this is a top level resource.
+     * @return: the timegate url
+     */
     getSyncTimeGateUrl: function(orgUrl, isTopLevelResource) {
         var tgUrl = ""
         this.isMementoActive = true
@@ -479,24 +615,36 @@ Memento.prototype = {
         return tgUrl
     },
 
+    /**
+     * Sets the memento icon. 
+     */
     setMementoIcon: function() {
-        if (this.tabId > 0) {
-            //chrome.browserAction.setIcon({tabId: this.tabId, 'path': 'img/memento_on-35x35.png'})
-            chrome.browserAction.setIcon({'path': 'img/memento_on-35x35.png'})
-        }
+        chrome.browserAction.setIcon({'path': 'img/memento_on-35x35.png'})
     },
 
+    /** 
+     * Sets the original icon.
+     */
     setOriginalIcon: function() {
-        if (this.tabId > 0) {
-            //chrome.browserAction.setIcon({tabId: this.tabId, 'path': 'img/memento-35x35.png'})
-            chrome.browserAction.setIcon({'path': 'img/memento-35x35.png'})
-        }
+        chrome.browserAction.setIcon({'path': 'img/memento-35x35.png'})
     },
 
+    /**
+     * A function to get the parameter value from a url.
+     * @param: url: the url with parameters.
+     * @param: name: the key/name of the parameter.
+     * @return: the value for the key/name.
+     */
     getUrlParameter: function(url, name) {
         return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(url)||[,""])[1].replace(/\+/g, '%20'))||null;
     },
 
+    /**
+     * If the request url is a yahoo or google search result, this
+     * function finds the original url. 
+     * @param: the request url
+     * @return: the original url
+     */
     filterSearchResultUrl: function(url) {
         if (url.search(this.yahooSearchURLRE) >= 0) {
             url = unescape(url.split("**")[1])
@@ -507,6 +655,10 @@ Memento.prototype = {
         return url
     },
 
+    /**
+     * reset the flags that determines if a resource is a memento.
+     */
+
     unsetMementoFlags: function() {
         this.isMementoActive = false
         this.specialDatetime = false
@@ -514,14 +666,23 @@ Memento.prototype = {
         this.isPsuedoMemento = false
     },
 
+    /**
+     * Reset the flag that was set when the calendar date time was modified.
+     */
     unsetDatetimeModifiedFlags: function() {
         this.isDatetimeModified = false
     },
 
+    /**
+     * Set the flag to indicate that the calendar datetime has been modified.
+     */
     setDatetimeModifiedFlags: function() {
         this.isDatetimeModified = true
     },
 
+    /** 
+     * Set the flags that indicate the current resource is a memento.
+     */
     setMementoFlags: function() {
         this.isMementoActive = true
         if (this.isPsuedoMemento) {
@@ -532,6 +693,10 @@ Memento.prototype = {
         }
     },
 
+    /** 
+     * The accept datetime value is set depending on the requested memento resource. 
+     * @param: type: the type of the memento resource to be requested. 
+     */ 
     setAcceptDatetime: function(type) {
         if (type == "calendar") {
             this.acceptDatetime = this.calendarDatetime
@@ -542,11 +707,24 @@ Memento.prototype = {
         }
     },
 
+    /**
+     * The accept datetime value is reset. 
+     * Happens everytime a new resource is loaded.
+     */
     unsetAcceptDatetime: function() {
         this.acceptDatetime = false
         this.specialDatetime = false
     },
 
+    /**
+     * Sets the necessary memento information of the loaded resource.
+     * @param: orgUrl: the original Url
+     * @param: tgUrl: the timegate url
+     * @param: memUrl: memento url
+     * @param: memDt: memento datetime of the loaded resource.
+     * @param: memBaseUrl: the base url of the memento. For non-native memento resources, 
+     * this information is used to decide if embedded resources should be processed. 
+     */
     setMementoInfo: function(orgUrl, tgUrl, memUrl, memDt, memBaseUrl) {
         this.originalUrl = orgUrl
         this.timegateUrl = tgUrl
@@ -557,6 +735,9 @@ Memento.prototype = {
         this.visitedUrls[this.mementoUrl] = this.orgUrl
     },
 
+    /**
+     * reset all the memento flags. 
+     */
     unsetMementoInfo: function() {
         this.originalUrl = false
         this.timegateUrl = false
@@ -565,6 +746,9 @@ Memento.prototype = {
         this.mementoDatetime = false
     },
 
+    /**
+     * initialize the UI for first time use. Called when the plugin is run for the first time.
+     */
     init: function() {
         var title = chrome.i18n.getMessage("menuInitDatetimeTitle")
         this.menuId = chrome.contextMenus.create({
@@ -576,7 +760,23 @@ Memento.prototype = {
 }
 
 
+/**
+ * Handler for each tab or window created in chrome. 
+ * Acts as an interface between the browser and the memento algorithm.
+ */
+function MementoExtension(tabId) {
+    this.requestIds = []
+    this.mem = new Memento()
+    this.getTimeGateFromStorage()
+}
+
 MementoExtension.prototype = {
+    /**
+     * Retrieves the calendar date time of the currently active tab. 
+     * Each tab's date time is stored in the local browser storage. 
+     * If a tab does not have a date time value, the date time value of the previously
+     * active tab is automatically assigned. 
+     */ 
     getDatetimeFromStorage: function() {
         chrome.storage.local.get(null, function(items) {
             var mementoAcceptDatetime;
@@ -600,6 +800,9 @@ MementoExtension.prototype = {
         })
     },
 
+    /** 
+     * The user preferred timegate is retrieved from storage.
+     */
     getTimeGateFromStorage: function() {
         chrome.storage.local.get(null, function(items) {
             if (items["mementoTimeGateUrl"]) {
@@ -610,16 +813,6 @@ MementoExtension.prototype = {
             }
         })
     }
-}
-
-function Memento(tabId) {
-    this.tabId = tabId
-}
-
-function MementoExtension(tabId) {
-    this.requestIds = []
-    this.mem = new Memento(tabId)
-    this.getTimeGateFromStorage()
 }
 
 var extensionTabs = {}
