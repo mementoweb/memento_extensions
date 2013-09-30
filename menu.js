@@ -40,7 +40,7 @@ MementoHttpRequest.prototype = {
 
     doHttp: function(uri, calendarDatetime, callback) {
         var hdrs = {}
-        if (this.calendarDatetime) {
+        if (calendarDatetime) {
         //if (setAcceptDatetime) {
             hdrs = {'Accept-Datetime': calendarDatetime.toGMTString()}
         }
