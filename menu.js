@@ -41,7 +41,6 @@ MementoHttpRequest.prototype = {
     doHttp: function(uri, calendarDatetime, callback) {
         var hdrs = {}
         if (calendarDatetime) {
-        //if (setAcceptDatetime) {
             hdrs = {'Accept-Datetime': calendarDatetime.toGMTString()}
         }
         $.ajax({
@@ -290,7 +289,7 @@ Memento.prototype = {
     ajax: function(uri, method, setAcceptDatetime) {
         var hdrs = {}
         if (setAcceptDatetime) {
-            hdrs = {'Accept-Datetime': this.calendarDatetime.toGMTString()}
+            hdrs = {'Accept-Datetime': this.acceptDatetime.toGMTString()}
         }
         var t = $.ajax({
             type: method,
@@ -571,7 +570,7 @@ Memento.prototype = {
         var Request = MementoHttpRequest.bind(callback)
         var r = new Request()
 
-        r.doHttp(orgUrl, this.calendarDatetime, function(tgHeadResponse) {
+        r.doHttp(orgUrl, this.acceptDatetime, function(tgHeadResponse) {
             callback(tgHeadResponse)
         })
     },
@@ -866,6 +865,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         }
     }
     if (clickedForOriginal) {
+        extensionTabs[tab.id].mem.unsetAcceptDatetime()
         extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl, function(headers) {
             var orgUrl = extensionTabs[tab.id].mem.processOriginalUrl(clickedUrl, headers)
             if (pageUrl && orgUrl == clickedUrl && extensionTabs[tab.id].mem.originalUrl != null) {
@@ -882,6 +882,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 
     }
     else if (clickedForMemento) {
+        extensionTabs[tab.id].mem.setAcceptDatetime("calendar")
         clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl)
 
         extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl, function(headers) {
@@ -904,18 +905,15 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                     return
                 }
                 window.setTimeout(extensionTabs[tab.id].mem.clearCache(), 2000)
-
-                extensionTabs[tab.id].mem.setAcceptDatetime("calendar")
-
                 extensionTabs[tab.id].mem.setMementoFlags()
                 extensionTabs[tab.id].mem.unsetDatetimeModifiedFlags()
-                
                 chrome.tabs.update(tab.id, {url: tgUrl})
                 return
             })
         })
     }
     else if (clickedForLastMemento) {
+        extensionTabs[tab.id].mem.setAcceptDatetime("last-memento")
         clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl)
 
         extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl, function(headers) {
@@ -949,7 +947,6 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                 extensionTabs[tab.id].mem.setMementoFlags()
                 extensionTabs[tab.id].mem.unsetDatetimeModifiedFlags()
                 extensionTabs[tab.id].mem.specialDatetime = new Date()
-                extensionTabs[tab.id].mem.setAcceptDatetime("last-memento")
                 chrome.tabs.update(tab.id, {url: lastMemento})
                 return
             })
@@ -1266,6 +1263,7 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
     if (activeTabId == details.tabId) {
         extensionTabs[details.tabId].mem.unsetMementoFlags()
         extensionTabs[details.tabId].mem.unsetMementoInfo()
+        extensionTabs[details.tabId].mem.unsetAcceptDatetime()
         extensionTabs[details.tabId].mem.updateUI()
     }
 },
@@ -1293,6 +1291,8 @@ chrome.webNavigation.onCommitted.addListener( function(details) {
         || details.transitionType == "keyword" 
         || details.transitionType == "keyword_generated") {
         var resetState = false
+        var serverRedirect = false
+
         if (extensionTabs[details.tabId].mem.mementoDatetime == "non-native") {
             resetState = true
         }
@@ -1302,7 +1302,13 @@ chrome.webNavigation.onCommitted.addListener( function(details) {
                     resetState = true
                     break
                 }
+                if (t == "server_redirect") {
+                    serverRedirect = true
+                }
             }
+        }
+        if (!serverRedirect) {
+            extensionTabs[details.tabId].mem.unsetAcceptDatetime()
         }
         if (!resetState) {
             return
