@@ -21,42 +21,163 @@
  * limitations under the License.
  */
 
-/** 
- * MementoHttpRequest implements aynchronous ajax requests.
- * Uses jQuery ajax functions.
- */
+function UI() {
+}
 
-function MementoHttpRequest() {}
+UI.prototype = {
 
-MementoHttpRequest.prototype = {
+    menuId: 0,
+    contexts: ["page", "link"],
+    contextUrlLabel: ["linkUrl", "srcUrl", "frameUrl", "pageUrl"],
+    originalMenuIds: [],
+    mementoMenuIds: [],
+    lastMementoMenuIds: [],
+    mementoDatetimeMenuIds: [],
+    timemapMenuIds: [],
 
     /**
-     * This function wraps the jQuery ajax method. The Accept-Datetime header
-     * can be optionally set.
-     * @param: uri: the uri to request
-     * @param: calendarDatetime: the accept-datetime to set.
-     * @param: callback: the callback function to execute on response received. 
+     * Creates the context menu on right click. 
+     * @param: title: the text to be displayed in the menu.
+     * @param: context: the context in which to display the menu
+     * @param: enabled: toggle to enable the menu
+     * @param: targetUrl: url patterns for this menu to appear.
+     * @return: the id of the created menu.
      */
 
-    doHttp: function(uri, calendarDatetime, callback) {
-        var hdrs = {}
-        if (calendarDatetime) {
-            hdrs = {'Accept-Datetime': calendarDatetime.toGMTString()}
-        }
-        $.ajax({
-            type: "HEAD",
-            url: uri,
-            headers: hdrs,
-            async: true,
-            success: function(data, textStatus, jqXHR) {
-                callback(jqXHR)
-            },
-            error: function(jqXHR, status, error) {
-                callback(jqXHR)
-            },
-            timeout: 8000
+    createContextMenuEntry: function(title, context, enabled, targetUrl) {
+        if (targetUrl == undefined || targetUrl == null) 
+            targetUrl = ["<all_urls>"]
+
+        var id = chrome.contextMenus.create({
+            "title": title,
+            "type": "normal",
+            "contexts": context,
+            "enabled": enabled,
+            "targetUrlPatterns": targetUrl
         })
+        return id
     },
+
+    /**
+     * Updates the menu items based on the resource loaded: a memento or an original.
+     */
+    updateContextMenu: function(calendarDatetime, mementoDatetime, isMementoActive, isPsuedoMemento, isDatetimeModified) {
+        var title = ""
+
+        for (var i=0, c; c=this.contexts[i]; i++) {
+            t = []
+            if (c == "page") {
+                t.push(c)
+                // SELECTED MEMENTO DATETIME
+                title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", calendarDatetime.toGMTString())
+                enabled = true
+                this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+
+                // LAST MEMENTO
+                title = chrome.i18n.getMessage("menuGetNearCurrentTitle")
+                enabled = true
+                this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+
+                // CURRENT TIME
+                title = chrome.i18n.getMessage("menuGetCurrentTitle")
+                var enabled = false
+                if (isMementoActive || isDatetimeModified || mementoDatetime) {
+                    enabled = true
+                }
+                this.originalMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+
+                // MEMENTO DATETIME
+                chrome.contextMenus.create({"type": "separator", "contexts": [c]})
+                var title = ""
+                if (isPsuedoMemento || mementoDatetime == "non-native") {
+                    title = chrome.i18n.getMessage("menuGotUnknownDateTitle")
+                }
+                else if (mementoDatetime) {
+                    title = chrome.i18n.getMessage("menuGotMementoDatetimeTitle", mementoDatetime)
+                }
+                else {
+                    title = chrome.i18n.getMessage("menuGotCurrentTitle")
+                }
+                enabled = false
+                this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+
+                // TIMEMAP
+                var title = "Get Timemap"
+                this.timemapMenuIds.push(this.createContextMenuEntry(title, t, true))
+            }
+            else if (c == "link") {
+                // SELECTED MEMENTO DATETIME
+                t.push(c)
+                title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", calendarDatetime.toGMTString())
+                enabled = true
+                this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+
+                // LAST MEMENTO
+                title = chrome.i18n.getMessage("menuGetNearCurrentTitle")
+                enabled = true
+                this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+
+                // CURRENT TIME
+                title = chrome.i18n.getMessage("menuGetCurrentTitle")
+                var enabled = false
+                if (mementoDatetime) {
+                    enabled = true
+                }
+                this.originalMenuIds.push(this.createContextMenuEntry(title, t, enabled))
+            }
+        }
+    },
+
+    /**
+     * Updates the menus and the icons depending on the loaded resource 
+     * type.
+     */
+    updateUI: function(calendarDatetime, mementoDatetime, isMementoActive, isPsuedoMemento, isDatetimeModified) {
+        chrome.contextMenus.removeAll()
+        if (!calendarDatetime) {
+            this.init()
+            return
+        }
+        this.originalMenuIds = []
+        this.mementoMenuIds = []
+        this.lastMementoMenuIds = []
+        this.mementoDatetimeMenuIds = []
+        this.timemapMenuIds = []
+        this.updateContextMenu(calendarDatetime, mementoDatetime, isMementoActive, isPsuedoMemento, isDatetimeModified)
+
+        if (mementoDatetime || isMementoActive) {
+            this.setMementoIcon()
+        }
+        else {
+            this.setOriginalIcon()
+        }
+    },
+
+    /**
+     * Sets the memento icon. 
+     */
+    setMementoIcon: function() {
+        chrome.browserAction.setIcon({'path': 'img/memento_on-35x35.png'})
+    },
+
+    /** 
+     * Sets the original icon.
+     */
+    setOriginalIcon: function() {
+        chrome.browserAction.setIcon({'path': 'img/memento-35x35.png'})
+    },
+
+    /**
+     * initialize the UI for first time use. Called when the plugin is run for the first time.
+     */
+    init: function() {
+        var title = chrome.i18n.getMessage("menuInitDatetimeTitle")
+        this.menuId = chrome.contextMenus.create({
+            "title": title,
+            "contexts": UI.contexts,
+            "enabled": false
+        })
+    }
 }
 
 /**
@@ -64,8 +185,6 @@ MementoHttpRequest.prototype = {
  * There are kludges here to extend support for archives that do not
  * natively support memento yet. 
  * The memento algorithm can be found at doc/memento_algorithm.txt file.
- * The handling of the menu and it's various states are also done here. 
- * TODO: decouple menu handling from the memento algorithm. 
  */
 
 function Memento() {
@@ -95,371 +214,9 @@ Memento.prototype = {
     clickedOriginalUrl: false,
     lastMementoUrl: false,
     specialDatetime: false,
-    
-    // MENU Variables
-    menuId: 0,
-    contexts: ["page", "link"],
-    contextUrlLabel: ["linkUrl", "srcUrl", "frameUrl", "pageUrl"],
     isDatetimeModified: false,
     visitedUrls: {},
-    originalMenuIds: [],
-    mementoMenuIds: [],
-    lastMementoMenuIds: [],
-    mementoDatetimeMenuIds: [],
-
-
-    /**
-     * Parses link headers and returns an object. The link header is 
-     * processed character by character.
-     * @param: link: the link header as a string. 
-     * @return: object: links[uri][rel] = relValue 
-     */
-
-    parseLinkHeader : function(link) {
-        var state = 'start';
-        var data = link.split('');
-        var uri = '';
-        var pt = '';
-        var pv = '';
-        var d = '';
-
-        var links = {};
-        while (data.length) {
-            if (state == 'start') {
-                d = data.shift();
-                while (d.match(/\s/)) d = data.shift();
-                if (d != "<") break;
-                state = "uri";
-            } else if (state == "uri") {
-                uri = '';
-                d = data.shift();
-                while (d != ">") {
-                    uri += d;
-                    d = data.shift();
-                }
-
-                // Check for broken header with a > in the URL
-                uritmp = '>';
-                d = data.shift();
-                while (d.match(/\s/)) {
-                    uritmp += d;
-                    d = data.shift();
-                }
-                // Now d is the first non space character, and should be either , or ;
-                if (d == ',' || d ==';'){
-                    // We're okay
-                    if (!links[uri]) {
-                        links[uri] = {};
-                    }
-                    state = "paramstart";
-                } else{
-                	// stay in state uri, and continue to append
-                    uritmp+=d;
-                    uri += uritmp;
-                }
-                
-            } else if (state == 'paramstart') {
-                while (d.match(/\s/) != null) d = data.shift();
-                if (d == ";") state = 'linkparam';
-                else if (d == ',') state = 'start';
-                else break
-            } else if (state == 'linkparam') {
-                d = data.shift();
-                while (d.match(/\s/) != null) d = data.shift();
-                pt = '';
-                while (data.length && d != ' ' && d != '=') {
-                    pt += d;
-                    d = data.shift();
-                }
-                while (d.match(/\s/) != null) d = data.shift();
-                if (d != "=") break
-                state='linkvalue';
-                if (links[uri][pt] == undefined) {
-                    links[uri][pt] = new Array();
-                }
-            } else if (state == 'linkvalue') {
-                d = data.shift();
-                while (d.match(/\s/) != null) d = data.shift();
-                pv = '';
-                if (d == '"') {
-                    pd = d;
-                    d = data.shift();
-                    while (d != undefined && d != '"' && pd != '\\') {
-                        pv += d;
-                        pd = d;
-                        d = data.shift();
-                    }
-                } else {
-                    while (d != undefined && d != " " && d != ',' && d != ';') {
-                        pv += d;
-                        d = data.shift();
-                    }
-                    if (data.length) data.unshift(d);
-                }
-                state = 'paramstart';
-                if(data != undefined){
-                    d = data.shift();
-                }
-                if (pt == 'rel') links[uri][pt] = links[uri][pt].concat(pv.split(' '));
-                else links[uri][pt].push(pv);
-            }
-        }
-        return links;
-    },
-
-    /**
-     * Returns the uri for the rel type requested.
-     * @param: lhash: the object returned from parseLinkHeader method.
-     * @param: rel: the rel type requested.
-     * @return: the matched uri or null on no match.
-     */
-
-    getUriForRel : function(lhash, rel) {
-    	for (var uri in lhash) {
-        	params = lhash[uri];
-            vals = lhash[uri]['rel'];
-            if (vals != undefined) {
-                for (var v=0, val; val= vals[v]; v++) {
-                    if (val == rel) {
-                        return uri;
-                    }
-                }
-            }
-        }
-        return null;
-    },
-
-    /**
-     * Given a header name, this method returns the http header value.
-     * The headers can be either an object of key value pairs,
-     * or a string.
-     * @param: headers: the http headers
-     * @param: headerName: the requested header name
-     * @return: the value of the header or false if none found.
-     */
-
-    getHeader: function(headers, headerName) {
-        if (typeof(headers) == "object") {
-            for (var i=0, h; h=headers[i]; i++) {
-                if (h.name.toLowerCase() == headerName.toLowerCase()) {
-                    return h.value
-                }
-            }
-        }
-        else if (typeof(headers) == "string"){
-            var headerLines = headers.split("\n")
-            for (header in headerLines) {
-                var linkParts = headerLines[header].split(':')
-                if (linkParts[0].trim().toLowerCase() == headerName.toLowerCase()) {
-                    return linkParts.slice(1, linkParts.length).join(":")
-                }
-            }
-        }
-        return false
-    },
-
-    /**
-     * A wrapper function that gets the link headers, parses it, 
-     * and returns the uri for the rel type asked. 
-     * @param: headers: the http response headers.
-     * @param: the rel type to look for in the link header. 
-     * @return: the url for the rel type.
-     */
-
-    getRelUriFromHeaders: function(headers, rel) {
-        var linkHeader = this.getHeader(headers, "link")
-        var relUrl = false
-        if (linkHeader != "") {
-            var links = this.parseLinkHeader(linkHeader.trim())
-            relUrl = this.getUriForRel(links, rel)
-        }
-        return relUrl
-    },
-
-    /** 
-     * This is for synchrous ajax requests. Used only when processing mementos for
-     * embedded resources. 
-     * TODO: re-write the handlers to process async requests and remove this function.
-     * @param: uri: the request url
-     * @param: method: the request http method
-     * @param: setAcceptDatetime: the optional accept-datetime to set
-     * @return: jqXHR: the jquery ajax object.
-     */
-
-    ajax: function(uri, method, setAcceptDatetime) {
-        var hdrs = {}
-        if (setAcceptDatetime) {
-            hdrs = {'Accept-Datetime': this.acceptDatetime.toGMTString()}
-        }
-        var t = $.ajax({
-            type: method,
-            url: uri,
-            headers: hdrs,
-            async: false,
-            success: function(data, textStatus, jqXHR) {
-                return jqXHR
-            },
-            error: function(jqXHR, status, error) {
-                return jqXHR
-            }
-        })
-        setTimeout( function() {
-            if (t && t.readyState != 4) {
-                t.abort()
-            }    
-        }, 8000)
-        return t
-    },
-
-    /**
-     * A function to append accept-datetime header to request headers. 
-     * @param: headers: the original request headers
-     * @param: datetime: the accept-datetime value to append
-     */
-    appendAcceptDatetimeHeader: function(headers, datetime) {
-        for (var i=0, h; h=headers[i]; i++) {
-            if (h['name'].toLowerCase() == "accept-datetime") {
-                h.pop()
-                break;
-            }
-        }
-        headers.push({"name": "Accept-Datetime", "value": datetime}) 
-    },
-
-    /**
-     * A list of uris or uri regex patters to not do memento on. 
-     * @return: an array of uris and patterns. 
-     */
-    getWhiteList: function() {
-        uriWhitelist = [];
-        uriWhitelist.push(new RegExp('google-analytics\\.com')); // everywhere, just ignore
-
-        return uriWhitelist;
-    },
-
-    /**
-     * This clears chrome's in-memory cache. Chrome has a caching mechanism 
-     * that does not seem to honor accept-datetime requests. The Memento algorithm
-     * cannot be implemented without clearing the cache before making a memento request. 
-     */
-
-    clearCache: function() {
-        chrome.webRequest.handlerBehaviorChanged()
-    },
-
-    /**
-     * Creates the context menu on right click. 
-     * @param: title: the text to be displayed in the menu.
-     * @param: context: the context in which to display the menu
-     * @param: enabled: toggle to enable the menu
-     * @param: targetUrl: url patterns for this menu to appear.
-     * @return: the id of the created menu.
-     */
-
-    createContextMenuEntry: function(title, context, enabled, targetUrl) {
-        if (targetUrl == undefined || targetUrl == null) 
-            targetUrl = ["<all_urls>"]
-
-        var id = chrome.contextMenus.create({
-            "title": title,
-            "type": "normal",
-            "contexts": context,
-            "enabled": enabled,
-            "targetUrlPatterns": targetUrl
-        })
-        return id
-    },
-
-    /**
-     * Updates the menu items based on the resource loaded: a memento or an original.
-     */
-    updateContextMenu: function() {
-        var title = ""
-
-        for (var i=0, c; c=this.contexts[i]; i++) {
-            t = []
-            if (c == "page") {
-                t.push(c)
-                // SELECTED MEMENTO DATETIME
-                title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", this.calendarDatetime.toGMTString())
-                enabled = true
-                this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-
-                // LAST MEMENTO
-                title = chrome.i18n.getMessage("menuGetNearCurrentTitle")
-                enabled = true
-                this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-
-                // CURRENT TIME
-                title = chrome.i18n.getMessage("menuGetCurrentTitle")
-                var enabled = false
-                if (this.isMementoActive || this.datetimeModified || this.mementoDatetime) {
-                    enabled = true
-                }
-                this.originalMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-
-                // MEMENTO DATETIME
-                chrome.contextMenus.create({"type": "separator", "contexts": [c]})
-                var title = ""
-                if (this.isPsuedoMemento || this.mementoDatetime == "non-native") {
-                    title = chrome.i18n.getMessage("menuGotUnknownDateTitle")
-                }
-                else if (this.mementoDatetime) {
-                    title = chrome.i18n.getMessage("menuGotMementoDatetimeTitle", this.mementoDatetime)
-                }
-                else {
-                    title = chrome.i18n.getMessage("menuGotCurrentTitle")
-                }
-                enabled = false
-                this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-            }
-            else if (c == "link") {
-                // SELECTED MEMENTO DATETIME
-                t.push(c)
-                title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", this.calendarDatetime.toGMTString())
-                enabled = true
-                this.mementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-
-                // LAST MEMENTO
-                title = chrome.i18n.getMessage("menuGetNearCurrentTitle")
-                enabled = true
-                this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-
-                // CURRENT TIME
-                title = chrome.i18n.getMessage("menuGetCurrentTitle")
-                var enabled = false
-                if (this.mementoDatetime) {
-                    enabled = true
-                }
-                this.originalMenuIds.push(this.createContextMenuEntry(title, t, enabled))
-            }
-        }
-    },
-
-    /**
-     * Updates the menus and the icons depending on the loaded resource 
-     * type.
-     */
-    updateUI: function() {
-        chrome.contextMenus.removeAll()
-        if (!this.calendarDatetime) {
-            this.init()
-            return
-        }
-        this.originalMenuIds = []
-        this.mementoMenuIds = []
-        this.lastMementoMenuIds = []
-        this.mementoDatetimeMenuIds = []
-        this.updateContextMenu()
-
-        if (this.mementoDatetime || this.isMementoActive) {
-            this.setMementoIcon()
-        }
-        else {
-            this.setOriginalIcon()
-        }
-    },
-
+    
     /**
      * Given any url, this method returns the original url of that resource.
      * A HEAD is performed on the resource and the original rel type url is  
@@ -470,7 +227,7 @@ Memento.prototype = {
      * @param: orgHeadResponse: the response headers from the HEAD on the resource.  
      */
     processOriginalUrl: function (reqUrl, orgHeadResponse) {
-        var orgUrl = this.getRelUriFromHeaders(orgHeadResponse, "original")
+        var orgUrl = MementoUtils.getRelUriFromHeaders(orgHeadResponse, "original")
         if (!orgUrl) {
             for (i in this.visitedUrls) {
                 if (i == reqUrl) {
@@ -525,17 +282,17 @@ Memento.prototype = {
      */
     processTimeGateUrl: function(orgUrl, tgHeadResponse, isTopLevelResource) {
         var tgUrl
-        if (this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
-            var contentLocation = this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Content-Location")
+        if (MementoUtils.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
+            var contentLocation = MementoUtils.getHeader(tgHeadResponse.getAllResponseHeaders(), "Content-Location")
             if (contentLocation) {
                 tgUrl = contentLocation
             }
         }
         else {
-            tgUrl = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
+            tgUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
         }
         if (!tgUrl) {
-            var doNotNeg = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "type")
+            var doNotNeg = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "type")
             if (doNotNeg == "http://mementoweb.org/terms/donotnegotiate") {
                 tgUrl = false
             }
@@ -558,15 +315,6 @@ Memento.prototype = {
         var tgUrl = ""
         this.isMementoActive = true
 
-        /*
-        if (orgUrl.search(this.wikipediaLanguageRE) >= 0) {
-            tgUrl = this.wikipediaTimegate + orgUrl
-            this.isPsuedoMemento = true
-            callback(tgUrl)
-            return
-        }
-        */
-
         var Request = MementoHttpRequest.bind(callback)
         var r = new Request()
 
@@ -585,22 +333,15 @@ Memento.prototype = {
         var tgUrl = ""
         this.isMementoActive = true
 
-        /*
-        if (orgUrl.search(this.wikipediaLanguageRE) >= 0) {
-            tgUrl = this.wikipediaTimegate + orgUrl
-            this.isPsuedoMemento = true
-            return tgUrl
-        }
-        */
-        var tgHeadResponse = this.ajax(orgUrl, "HEAD", true)
-        if (this.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
+        var tgHeadResponse = MementoUtils.ajax(orgUrl, "HEAD", this.acceptDatetime)
+        if (MementoUtils.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
             tgUrl = orgUrl
         }
         else {
-            tgUrl = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
+            tgUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
         }
         if (!tgUrl) {
-            var doNotNeg = this.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "type")
+            var doNotNeg = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "type")
             if (doNotNeg == "http://mementoweb.org/terms/donotnegotiate") {
                 tgUrl = false
             }
@@ -612,20 +353,6 @@ Memento.prototype = {
             }
         }
         return tgUrl
-    },
-
-    /**
-     * Sets the memento icon. 
-     */
-    setMementoIcon: function() {
-        chrome.browserAction.setIcon({'path': 'img/memento_on-35x35.png'})
-    },
-
-    /** 
-     * Sets the original icon.
-     */
-    setOriginalIcon: function() {
-        chrome.browserAction.setIcon({'path': 'img/memento-35x35.png'})
     },
 
     /**
@@ -743,19 +470,8 @@ Memento.prototype = {
         this.mementoUrl = false
         this.mementoBaseUrl = false
         this.mementoDatetime = false
-    },
-
-    /**
-     * initialize the UI for first time use. Called when the plugin is run for the first time.
-     */
-    init: function() {
-        var title = chrome.i18n.getMessage("menuInitDatetimeTitle")
-        this.menuId = chrome.contextMenus.create({
-            "title": title,
-            "contexts": Memento.contexts,
-            "enabled": false
-        })
     }
+
 }
 
 
@@ -766,10 +482,22 @@ Memento.prototype = {
 function MementoExtension(tabId) {
     this.requestIds = []
     this.mem = new Memento()
+    this.ui = new UI()
     this.getTimeGateFromStorage()
 }
 
 MementoExtension.prototype = {
+
+    /**
+     * This clears chrome's in-memory cache. Chrome has a caching mechanism 
+     * that does not seem to honor accept-datetime requests. The Memento algorithm
+     * cannot be implemented without clearing the cache before making a memento request. 
+     */
+
+    clearCache: function() {
+        chrome.webRequest.handlerBehaviorChanged()
+    },
+
     /**
      * Retrieves the calendar date time of the currently active tab. 
      * Each tab's date time is stored in the local browser storage. 
@@ -790,12 +518,18 @@ MementoExtension.prototype = {
             }
             else {
                 chrome.contextMenus.removeAll()
-                extensionTabs[activeTabId].mem.init()
+                extensionTabs[activeTabId].ui.init()
             }
             if (mementoAcceptDatetime) {
                 extensionTabs[activeTabId].mem.calendarDatetime = new Date(mementoAcceptDatetime)
             }
-            extensionTabs[activeTabId].mem.updateUI()
+            extensionTabs[activeTabId].ui.updateUI(
+                extensionTabs[activeTabId].mem.calendarDatetime,
+                extensionTabs[activeTabId].mem.mementoDatetime,
+                extensionTabs[activeTabId].mem.isMementoActive,
+                extensionTabs[activeTabId].mem.isPsuedoMemento,
+                extensionTabs[activeTabId].mem.isDatetimeModified
+            )
         })
     },
 
@@ -818,7 +552,7 @@ var extensionTabs = {}
 var activeTabId = 0
 
 
-/*************** Hooking to Browser Events *****************/
+/*************** Browser Events *****************/
 
 
 /*************** Context Menu On Click *****************/
@@ -827,10 +561,10 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 
     var clickedUrl = ""
     var pageUrl = false
-    for (var i in extensionTabs[tab.id].mem.contextUrlLabel) {
-        if (info[extensionTabs[tab.id].mem.contextUrlLabel[i]] != undefined) {
-            clickedUrl = info[extensionTabs[tab.id].mem.contextUrlLabel[i]]
-            pageUrl = (extensionTabs[tab.id].mem.contextUrlLabel[i] == "pageUrl") ? true : false
+    for (var i in extensionTabs[tab.id].ui.contextUrlLabel) {
+        if (info[extensionTabs[tab.id].ui.contextUrlLabel[i]] != undefined) {
+            clickedUrl = info[extensionTabs[tab.id].ui.contextUrlLabel[i]]
+            pageUrl = (extensionTabs[tab.id].ui.contextUrlLabel[i] == "pageUrl") ? true : false
             break
         }
     }
@@ -844,26 +578,34 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
     var clickedForOriginal = false
     var clickedForMemento = false
     var clickedForLastMemento = false
+    var clickedForTimemap = false
     extensionTabs[tab.id].mem.specialDatetime = false
 
-    for (var i=0, id; id=extensionTabs[tab.id].mem.originalMenuIds[i]; i++) {
+    for (var i=0, id; id=extensionTabs[tab.id].ui.originalMenuIds[i]; i++) {
         if (info['menuItemId'] == id) {
             clickedForOriginal = true
             break
         }
     }
-    for (var i=0, id; id=extensionTabs[tab.id].mem.mementoMenuIds[i]; i++) {
+    for (var i=0, id; id=extensionTabs[tab.id].ui.mementoMenuIds[i]; i++) {
         if (info['menuItemId'] == id) {
             clickedForMemento = true
             break
         }
     }
-    for (var i=0, id; id=extensionTabs[tab.id].mem.lastMementoMenuIds[i]; i++) {
+    for (var i=0, id; id=extensionTabs[tab.id].ui.lastMementoMenuIds[i]; i++) {
         if (info['menuItemId'] == id) {
             clickedForLastMemento = true
             break
         }
     }
+    for (var i=0, id; id=extensionTabs[tab.id].ui.timemapMenuIds[i]; i++) {
+        if (info['menuItemId'] == id) {
+            clickedForTimemap = true
+            break
+        }
+    }
+
     if (clickedForOriginal) {
         extensionTabs[tab.id].mem.unsetAcceptDatetime()
         extensionTabs[tab.id].mem.getOriginalUrl(clickedUrl, function(headers) {
@@ -904,7 +646,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                     chrome.tabs.update(tab.id, {url: clickedUrl})
                     return
                 }
-                window.setTimeout(extensionTabs[tab.id].mem.clearCache(), 2000)
+                window.setTimeout(extensionTabs[tab.id].clearCache(), 2000)
                 extensionTabs[tab.id].mem.setMementoFlags()
                 extensionTabs[tab.id].mem.unsetDatetimeModifiedFlags()
                 chrome.tabs.update(tab.id, {url: tgUrl})
@@ -943,13 +685,17 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                     chrome.tabs.update(tab.id, {url: clickedUrl})
                     return
                 }
-                window.setTimeout(extensionTabs[tab.id].mem.clearCache(), 2000)
+                window.setTimeout(extensionTabs[tab.id].clearCache(), 2000)
                 extensionTabs[tab.id].mem.setMementoFlags()
                 extensionTabs[tab.id].mem.unsetDatetimeModifiedFlags()
                 extensionTabs[tab.id].mem.specialDatetime = new Date()
                 chrome.tabs.update(tab.id, {url: lastMemento})
                 return
             })
+        })
+    }
+    else if (clickedForTimemap) {
+        chrome.tabs.create({"url": "timemap.html?org_url="+escape(clickedUrl)}, function(window) {
         })
     }
 })
@@ -1061,6 +807,10 @@ chrome.tabs.onRemoved.addListener( function(tabId, removeInfo) {
  */
 
 chrome.storage.onChanged.addListener( function(changes, namespace) {
+    if (extensionTabs[activeTabId] == undefined) {
+        return
+    }
+
     if (changes["memento-accept-datetime"]) {
         var mementoAcceptDatetime = changes['memento-accept-datetime']['newValue']
 
@@ -1072,7 +822,14 @@ chrome.storage.onChanged.addListener( function(changes, namespace) {
         if (extensionTabs[activeTabId].mem.mementoDatetime) {
             extensionTabs[activeTabId].mem.isDatetimeModified = true
         }
-        extensionTabs[activeTabId].mem.updateUI()
+
+        extensionTabs[activeTabId].ui.updateUI(
+            extensionTabs[activeTabId].mem.calendarDatetime,
+            extensionTabs[activeTabId].mem.mementoDatetime,
+            extensionTabs[activeTabId].mem.isMementoActive,
+            extensionTabs[activeTabId].mem.isPsuedoMemento,
+            extensionTabs[activeTabId].mem.isDatetimeModified
+        )
     }
     else if (changes["mementoTimeGateUrl"]) {
         extensionTabs[activeTabId].getTimeGateFromStorage()
@@ -1104,7 +861,7 @@ chrome.webRequest.onBeforeRequest.addListener( function(details) {
 
     // not doing memento for known uris that does not have mementos or
     // does not need memento processing.
-    var whiteList = extensionTabs[details.tabId].mem.getWhiteList()
+    var whiteList = MementoUtils.getWhiteList()
     for (var i=0, r; r=whiteList[i]; i++) {
         if (details.url.match(r)) {
             return
@@ -1159,11 +916,12 @@ chrome.webRequest.onBeforeSendHeaders.addListener( function(details) {
     if (extensionTabs[details.tabId] == undefined) {
         return
     }
+    var hdrs = details.requestHeaders
     if (extensionTabs[details.tabId].mem.isMementoActive) {
         if (extensionTabs[details.tabId].mem.acceptDatetime) {
-            extensionTabs[details.tabId].mem.appendAcceptDatetimeHeader(details.requestHeaders, extensionTabs[details.tabId].mem.acceptDatetime.toGMTString())
+            hdrs = MementoUtils.appendAcceptDatetimeHeader(details.requestHeaders, extensionTabs[details.tabId].mem.acceptDatetime.toGMTString())
         }
-        return {requestHeaders: details.requestHeaders}
+        return {requestHeaders: hdrs}
     }
 },
 {urls: ["<all_urls>"]},
@@ -1190,12 +948,12 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
         return
     }
     if (details.statusLine.search("HTTP/1.1 30") == 0) {
-        extensionTabs[details.tabId].mem.lastMementoUrl = extensionTabs[details.tabId].mem.getRelUriFromHeaders(details.responseHeaders, "last")    
+        extensionTabs[details.tabId].mem.lastMementoUrl = MementoUtils.getRelUriFromHeaders(details.responseHeaders, "last")    
         return
     }
 
-    var tgUrl = extensionTabs[details.tabId].mem.getRelUriFromHeaders(details.responseHeaders, "timegate")
-    var orgUrl = extensionTabs[details.tabId].mem.getRelUriFromHeaders(details.responseHeaders, "original")
+    var tgUrl = MementoUtils.getRelUriFromHeaders(details.responseHeaders, "timegate")
+    var orgUrl = MementoUtils.getRelUriFromHeaders(details.responseHeaders, "original")
     /* 
     * checking if this is a native memento resource
     * the "memento-datetime" header confirms this
@@ -1220,7 +978,13 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
             extensionTabs[details.tabId].mem.isPsuedoMemento = false
             extensionTabs[details.tabId].mem.setMementoInfo(orgUrl, tgUrl, details.url, h.value, baseUrl)
 
-            extensionTabs[details.tabId].mem.updateUI()
+            extensionTabs[details.tabId].ui.updateUI(
+                extensionTabs[details.tabId].mem.calendarDatetime,
+                extensionTabs[details.tabId].mem.mementoDatetime,
+                extensionTabs[details.tabId].mem.isMementoActive,
+                extensionTabs[details.tabId].mem.isPsuedoMemento,
+                extensionTabs[details.tabId].mem.isDatetimeModified
+            )
             return
         }
     }
@@ -1242,7 +1006,13 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
         }
         extensionTabs[details.tabId].mem.setMementoFlags()
         extensionTabs[details.tabId].mem.setMementoInfo(orgUrl, tgUrl, details.url, "non-native", false)
-        extensionTabs[details.tabId].mem.updateUI()
+        extensionTabs[details.tabId].ui.updateUI(
+            extensionTabs[details.tabId].mem.calendarDatetime,
+            extensionTabs[details.tabId].mem.mementoDatetime,
+            extensionTabs[details.tabId].mem.isMementoActive,
+            extensionTabs[details.tabId].mem.isPsuedoMemento,
+            extensionTabs[details.tabId].mem.isDatetimeModified
+        )
         return
     }
 
@@ -1255,7 +1025,13 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
 
         extensionTabs[details.tabId].mem.setMementoFlags()
         extensionTabs[details.tabId].mem.setMementoInfo(orgUrl, tgUrl, details.url, "non-native", false)
-        extensionTabs[details.tabId].mem.updateUI()
+        extensionTabs[details.tabId].ui.updateUI(
+            extensionTabs[details.tabId].mem.calendarDatetime,
+            extensionTabs[details.tabId].mem.mementoDatetime,
+            extensionTabs[details.tabId].mem.isMementoActive,
+            extensionTabs[details.tabId].mem.isPsuedoMemento,
+            extensionTabs[details.tabId].mem.isDatetimeModified
+        )
         return
     }
     
@@ -1264,7 +1040,13 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
         extensionTabs[details.tabId].mem.unsetMementoFlags()
         extensionTabs[details.tabId].mem.unsetMementoInfo()
         extensionTabs[details.tabId].mem.unsetAcceptDatetime()
-        extensionTabs[details.tabId].mem.updateUI()
+        extensionTabs[details.tabId].ui.updateUI(
+            extensionTabs[details.tabId].mem.calendarDatetime,
+            extensionTabs[details.tabId].mem.mementoDatetime,
+            extensionTabs[details.tabId].mem.isMementoActive,
+            extensionTabs[details.tabId].mem.isPsuedoMemento,
+            extensionTabs[details.tabId].mem.isDatetimeModified
+        )
     }
 },
 {urls: ["<all_urls>"]},
@@ -1315,10 +1097,16 @@ chrome.webNavigation.onCommitted.addListener( function(details) {
         }
         extensionTabs[details.tabId].mem.unsetMementoFlags()
         delete extensionTabs[details.tabId].mem.visitedUrls[details.url]
-        extensionTabs[details.tabId].mem.updateUI()
+        extensionTabs[details.tabId].ui.updateUI(
+            extensionTabs[details.tabId].mem.calendarDatetime,
+            extensionTabs[details.tabId].mem.mementoDatetime,
+            extensionTabs[details.tabId].mem.isMementoActive,
+            extensionTabs[details.tabId].mem.isPsuedoMemento,
+            extensionTabs[details.tabId].mem.isDatetimeModified
+        )
     }
     else if (details.transitionType == "reload") {
-        extensionTabs[details.tabId].mem.clearCache()
+        extensionTabs[details.tabId].clearCache()
     }
 })
 
@@ -1332,7 +1120,7 @@ chrome.runtime.onInstalled.addListener(function(details) {
     if (!extensionTabs[activeTabId]) {
         return
     }
-    extensionTabs[activeTabId].mem.init()
+    extensionTabs[activeTabId].ui.init()
     chrome.storage.local.set({'mementoTimeGateUrl': extensionTabs[activeTabId].mem.aggregatorUrl})
 })
 
