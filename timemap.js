@@ -1,142 +1,269 @@
 
-function getUrlParameter(url, name) {
-    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(url)||[,""])[1].replace(/\+/g, '%20'))||null;
-}
-
 $( function() {
     var locUrl = document.location.href
-    var reqUrl = unescape(getUrlParameter(locUrl, "org_url"))
+    var reqUrl = unescape(MementoUtils.getUrlParameter(locUrl, "org_url"))
     if (!reqUrl || reqUrl == "undefined") {
         return
     }
 
     var r = new MementoHttpRequest()
     r.doHttp(reqUrl, false, function(reqHeadResponse) {
-        headRequest(reqUrl, reqHeadResponse)
+        Timemap.headRequest(reqUrl, reqHeadResponse)
     })
     
 })
 
-function headRequest(reqUrl, reqHeadResponse) {
+var Timemap = {
 
-    var orgUrl = MementoUtils.getRelUriFromHeaders(reqHeadResponse.getAllResponseHeaders(), "original")
-    if (!orgUrl) {
-        orgUrl = reqUrl;
-    }
-        
-    console.log("Original url: " + orgUrl)
+    visitedTimemaps: [],
+    mementoCount: 0,
+    archiveCount: {},
+    timemapPage: 0,
 
-    var r = new MementoHttpRequest()
-
-    r.doHttp(orgUrl, false, function(orgHeadResponse) {
-        var timegateUrl = MementoUtils.getRelUriFromHeaders(orgHeadResponse.getAllResponseHeaders(), "timegate")
-        headTimegate(orgUrl, timegateUrl)
-    })
-}
-
-function headTimegate(orgUrl, timegateUrl) {
-    if (!timegateUrl) {
-        timegateUrl = "http://mementoproxy.lanl.gov/aggr/timegate/" + orgUrl
-        timemapUrl = "http://mementoproxy.lanl.gov/aggr/timemap/link/1/" + orgUrl
-        getTimemap(timemapUrl)
-    }
-    else {
-        console.log("Timegate url: " + timegateUrl)
-
-        var Request = MementoHttpRequest.bind(getTimemap)
-        var r = new Request()
-
-        r.doHttp(timegateUrl, false, function(tgHeadResponse) {
-            var timemapUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timemap")
-            getTimemap(timemapUrl)
-        })
-    }
-}
-
-function getTimemap(timemapUrl) {
-    
-    if (!timemapUrl) {
-        return
-    }
-    for (var i=0, u; u=visitedTimemaps[i]; i++) {
-        if (u == timemapUrl) {
-            return
+    getArchiveIcon: function(url, incrementCounts) {
+        archiveIcons = {};
+        archiveIcons["http://web.archive.org/web/"] = "img/archives/internet-archive.png";
+        archiveIcons["http://wayback.archive-it.org/"] = "img/archives/archive-it.png";
+        archiveIcons["http://webarchive.nationalarchives.gov.uk/"] = "img/archives/ukna.png";
+        archiveIcons["http://www.webarchive.org.uk"] = "img/archives/ukwa.png";
+        archiveIcons["http://archive.is/"] = "img/archives/archive-is.png";
+        archiveIcons["http://webarchive.loc.gov/"] = "img/archives/loc.png";
+        archiveIcons["http://wayback.vefsafn.is/"] = "img/archives/icelandic-archive.png";
+        archiveIcons["http://wayback.webarchiv.cz/"] = "img/archives/czech-archive.png";
+        archiveIcons["native"] = "img/archives/default.png";
+        for (baseUrl in archiveIcons) {
+            if (url.search(baseUrl) >= 0) {
+                if (incrementCounts) {
+                    if (!this.archiveCount[baseUrl])
+                        this.archiveCount[baseUrl] = 0
+                    this.archiveCount[baseUrl]++ 
+                }
+                return archiveIcons[baseUrl]
+            }
         }
-    }
-    visitedTimemaps.push(timemapUrl)
-
-    var r = new MementoHttpRequest()
-    r.doHttp(timemapUrl, false, function(tmResponse) {
-        console.log("Timemap url: " + timemapUrl)
-        processTimemap(tmResponse)
-    }, "GET")
-}
-
-var visitedTimemaps = []
-var mementoCount = 0
-var archiveCount = {}
-
-var archiveIcons = {}
-archiveIcons["http://web.archive.org/web/"] = "img/archives/internet-archive.png";
-archiveIcons["http://wayback.archive-it.org/"] = "img/archives/archive-it.png";
-archiveIcons["http://webarchive.nationalarchives.gov.uk/"] = "img/archives/ukna.png";
-archiveIcons["http://www.webarchive.org.uk"] = "img/archives/ukwa.png";
-archiveIcons["http://archive.is/"] = "img/archives/archive-is.png";
-archiveIcons["http://webarchive.loc.gov/"] = "img/archives/loc.png";
-archiveIcons["http://wayback.vefsafn.is/"] = "img/archives/icelandic-archive.png";
-archiveIcons["http://wayback.webarchiv.cz/"] = "img/archives/czech-archive.png";
-archiveIcons["default"] = "img/archives/default.png";
-
-function getArchiveIcon(url) {
-    for (baseUrl in archiveIcons) {
-        if (url.search(baseUrl) >= 0) {
-            if (!archiveCount[baseUrl])
-                archiveCount[baseUrl] = 0
-            archiveCount[baseUrl]++ 
-            return archiveIcons[baseUrl]
+        if (incrementCounts) {
+            if (!this.archiveCount["native"])
+                this.archiveCount["native"] = 0
+            this.archiveCount["native"]++
         }
-    }
-    if (!archiveCount["default"])
-        archiveCount["default"] = 0
-    archiveCount["default"]++
-    return archiveIcons["default"]
-}
+        return archiveIcons["native"]
+    },
 
-function processTimemap(tmResponse) {
-    var lhash = MementoUtils.parseLinkHeader(tmResponse.responseText)
-    var mems = []
-    for (var uri in lhash) {
-        params = lhash[uri];
-        vals = lhash[uri]['rel'];
-        if (vals != undefined) {
-            for (var v=0, val; val= vals[v]; v++) {
-                if (val == "memento") {
-                    mementoCount++
-                    var icon = "<span class='memento_icon'><img src='"+getArchiveIcon(uri)+"' /></span>";
-                    if (mementoCount % 2 == 0) {
-                        mems.push("<div class='memento even'><span class='memento_count'>"+mementoCount+":</span>"+icon+"<a href=\""+uri+"\" target=\"_blank\">"+lhash[uri]['datetime'][0]+"</a></div>");
-                    }
-                    else {
-                        mems.push("<div class='memento odd'><span class='memento_count'>"+mementoCount+":</span>"+icon+"<a href=\""+uri+"\" target=\"_blank\">"+lhash[uri]['datetime'][0]+"</a></div>");
+    createArchiveStatisticsHtml: function() {
+
+        var acHtml = ""
+        for (baseUrl in this.archiveCount) {
+            acHtml += "<div class='archive'>"
+            acHtml += "<span class='archive_icon'><img alt='"+baseUrl+"' title='"+baseUrl+"' src='"+this.getArchiveIcon(baseUrl)+"'/></span>"
+            acHtml += "<span class='archive_basurl'><i>"+baseUrl+"</i></span>";
+            acHtml += "<span class='archive_count'><b>"+this.archiveCount[baseUrl]+"</b></span>"
+            acHtml += "</div>";   
+        }
+        return acHtml
+    },
+
+    parseTimemap : function(link) {
+        var state = 'start';
+        if (link.split("\n").length > 5000) {
+            console.log(link.split("\n").length)
+            return false;
+        }
+            
+        var data = link.split('');
+        var uri = '';
+        var pt = '';
+        var pv = '';
+        var d = '';
+
+        var mems = [];
+        var meta = [];
+        var memHtml = [];
+
+        while (data.length) {
+            if (state == 'start') {
+                if (memHtml.length == 2) {
+                    mems.push(memHtml.join(""))
+
+                    if (mems.length % 500 == 0) {
+                        $("#mementos").append(mems.join(""))
+
+                        $("#archive_stats").empty()
+                        $("#archive_stats").append(this.createArchiveStatisticsHtml())
+                        mems = []
                     }
                 }
-                if (val == "timemap") {
-                    getTimemap(uri)
+                memHtml = [];
+                d = data.shift();
+                while (d.match(/\s/)) d = data.shift();
+                if (d != "<") break;
+                state = "uri";
+            } else if (state == "uri") {
+                uri = '';
+                d = data.shift();
+                while (d != ">") {
+                    uri += d;
+                    d = data.shift();
+                }
+
+                // Check for broken header with a > in the URL
+                uritmp = '>';
+                d = data.shift();
+                while (d.match(/\s/)) {
+                    uritmp += d;
+                    d = data.shift();
+                }
+                // Now d is the first non space character, and should be either , or ;
+                if (d == ',' || d ==';'){
+                    // We're okay
+                    state = "paramstart";
+                } else{
+                    // stay in state uri, and continue to append
+                    uritmp+=d;
+                    uri += uritmp;
+                }
+
+            } else if (state == 'paramstart') {
+                while (d.match(/\s/) != null) d = data.shift();
+                if (d == ";") state = 'linkparam';
+                else if (d == ',') state = 'start';
+                else break
+            } else if (state == 'linkparam') {
+                d = data.shift();
+                while (d.match(/\s/) != null) d = data.shift();
+                pt = '';
+                while (data.length && d != ' ' && d != '=') {
+                    pt += d;
+                    d = data.shift();
+                }
+                while (d.match(/\s/) != null) d = data.shift();
+                if (d != "=") break
+                state='linkvalue';
+            } else if (state == 'linkvalue') {
+                d = data.shift();
+                while (d.match(/\s/) != null) d = data.shift();
+                pv = '';
+                if (d == '"') {
+                    pd = d;
+                    d = data.shift();
+                    while (d != undefined && d != '"' && pd != '\\') {
+                        pv += d;
+                        pd = d;
+                        d = data.shift();
+                    }
+                } else {
+                    while (d != undefined && d != " " && d != ',' && d != ';') {
+                        pv += d;
+                        d = data.shift();
+                    }
+                    if (data.length) data.unshift(d);
+                }
+                state = 'paramstart';
+                if(data != undefined){
+                    d = data.shift();
+                }
+
+                if (pv.search("memento") >= 0) {
+                    this.mementoCount++
+                    var icon = "<span class='memento_icon'><img src='"+this.getArchiveIcon(uri, true)+"' /></span>";
+                    if (this.mementoCount % 2 == 0) {
+                        memHtml.push("<div class='memento even'><span class='memento_count'>"+this.mementoCount+":</span>"+icon+"<a href=\""+uri+"\" target=\"_blank\">")
+                    }
+                    else {
+                        memHtml.push("<div class='memento odd'><span class='memento_count'>"+this.mementoCount+":</span>"+icon+"<a href=\""+uri+"\" target=\"_blank\">");
+                    }
+                }
+                if (pt == "datetime") {
+                    memHtml.push(pv+"</a></div>");
+                }
+                if (pv == "original" && this.timemapPage == 0) {
+                    meta.push("<div class='timemap_meta'><span class='meta_label'>Original URL: </span><span class='meta_link'><a href=\""+uri+"\" target=\"_blank\">"+uri+"</a></span></div>")
+                }
+                if (pv == "timegate" && this.timemapPage == 0) {
+                    meta.push("<div class='timemap_meta'><span class='meta_label'>TimeGate URL: </span><span class='meta_link'><a href=\""+uri+"\" target=\"_blank\">"+uri+"</a></span></div>")
+                }
+                if (pv == "self") {
+                    meta.push("<div class='timemap_meta'><span class='meta_label'>Download TimeMap "+(parseInt(this.timemapPage) + 1).toString()+": </span><span class='meta_link'><a href=\""+uri+"\" target=\"_blank\">"+uri+"</a></span></div>")
+                }
+                if (pv == "timemap") {
+                    this.timemapPage++
+                    this.getTimemap(uri)
                 }
             }
         }
-    }
-    $("#mementos").append(mems.join(""))
+        $("#mementos").append(mems.join(""))
+        $("#timemap_overview").append(meta.join(""))
 
-    var acHtml = ""
-    for (baseUrl in archiveCount) {
-        acHtml += "<div class='archive'>"
-        acHtml += "<span class='archive_icon'><img alt='"+baseUrl+"' title='"+baseUrl+"' src='"+getArchiveIcon(baseUrl)+"'/></span>"
-        acHtml += "<span class='archive_basurl'><i>"+baseUrl+"</i></span>";
-        acHtml += "<span class='archive_count'><b>"+archiveCount[baseUrl]+"</b></span>"
-        acHtml += "</div>";   
+        $("#archive_stats").empty()
+        $("#archive_stats").append(this.createArchiveStatisticsHtml())
+        return true;
+    },
+
+    headRequest: function(reqUrl, reqHeadResponse) {
+
+        var orgUrl = MementoUtils.getRelUriFromHeaders(reqHeadResponse.getAllResponseHeaders(), "original")
+        if (!orgUrl) {
+            orgUrl = reqUrl;
+        }
+
+        console.log("Original url: " + orgUrl)
+
+        var r = new MementoHttpRequest()
+
+        r.doHttp(orgUrl, false, function(orgHeadResponse) {
+            var timegateUrl = MementoUtils.getRelUriFromHeaders(orgHeadResponse.getAllResponseHeaders(), "timegate")
+            Timemap.headTimegate(orgUrl, timegateUrl)
+        })
+    },
+
+    headTimegate: function(orgUrl, timegateUrl) {
+        if (!timegateUrl) {
+            timegateUrl = "http://mementoproxy.lanl.gov/aggr/timegate/" + orgUrl
+            timemapUrl = "http://mementoproxy.lanl.gov/aggr/timemap/link/1/" + orgUrl
+            this.getTimemap(timemapUrl)
+        }
+        else {
+            console.log("Timegate url: " + timegateUrl)
+
+            var r = new MementoHttpRequest()
+
+            r.doHttp(timegateUrl, false, function(tgHeadResponse) {
+                var timemapUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timemap")
+                Timemap.getTimemap(timemapUrl)
+            })
+        }
+    },
+
+    getTimemap: function(timemapUrl) {
+
+        if (!timemapUrl) {
+            return
+        }
+        for (var i=0, u; u=this.visitedTimemaps[i]; i++) {
+            if (u == timemapUrl) {
+                return
+            }
+        }
+        this.visitedTimemaps.push(timemapUrl)
+
+        var r = new MementoHttpRequest()
+        r.doHttp(timemapUrl, false, function(tmResponse) {
+            console.log("Timemap url: " + timemapUrl)
+            Timemap.processTimemap(timemapUrl, tmResponse)
+        }, "GET", true)
+    },
+
+    processTimemap: function(timemapUrl, tmResponse) {
+        //var lhash = MementoUtils.parseLinkHeader(tmResponse.responseText)
+        console.log(tmResponse)
+        var timemap = this.parseTimemap(tmResponse.responseText)
+        if (!timemap) {
+            var error = ""
+            error += "<div class='ui-state-error ui-corner-all timemap_error'>"
+            error += "The TimeMap for this resource is too large to process.<br/> You may download the TimeMap directly from the link below.<br/>"
+            error += "<a href=\""+timemapUrl+"\" target=\"_blank\" >"+timemapUrl+"</a>";
+            error += "</div>"
+            $("body").empty()
+            $("body").append(error)
+        }
     }
-    
-    $("#archive_stats").empty()
-    $("#archive_stats").append(acHtml)
 }

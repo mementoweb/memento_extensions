@@ -38,7 +38,11 @@ MementoHttpRequest.prototype = {
      * @param: callback: the callback function to execute on response received. 
      */
 
-    doHttp: function(uri, calendarDatetime, callback, typ) {
+    doHttp: function(uri, calendarDatetime, callback, typ, waitLonger) {
+        var tOut = 8000
+        if (waitLonger) {
+            tOut = 30000
+        }
         var hdrs = {}
         if (calendarDatetime) {
             hdrs = {'Accept-Datetime': calendarDatetime.toGMTString()}
@@ -57,13 +61,24 @@ MementoHttpRequest.prototype = {
             error: function(jqXHR, status, error) {
                 callback(jqXHR)
             },
-            timeout: 8000
+            timeout: tOut
         })
     }
 
 }
 
 MementoUtils = {
+
+    /**
+     * A function to get the parameter value from a url.
+     * @param: url: the url with parameters.
+     * @param: name: the key/name of the parameter.
+     * @return: the value for the key/name.
+     */
+    getUrlParameter: function(url, name) {
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(url)||[,""])[1].replace(/\+/g, '%20'))||null;
+    },
+
 
     /**
      * Parses link headers and returns an object. The link header is 

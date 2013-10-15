@@ -102,7 +102,7 @@ UI.prototype = {
                 this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
                 // TIMEMAP
-                var title = "Get Timemap"
+                var title = chrome.i18n.getMessage("menuGetVersionOverview")
                 this.timemapMenuIds.push(this.createContextMenuEntry(title, t, true))
             }
             else if (c == "link") {
@@ -282,15 +282,18 @@ Memento.prototype = {
      */
     processTimeGateUrl: function(orgUrl, tgHeadResponse, isTopLevelResource) {
         var tgUrl
+        /*
         if (MementoUtils.getHeader(tgHeadResponse.getAllResponseHeaders(), "Memento-Datetime")) {
-            var contentLocation = MementoUtils.getHeader(tgHeadResponse.getAllResponseHeaders(), "Content-Location")
-            if (contentLocation) {
-                tgUrl = contentLocation
-            }
+            //var contentLocation = MementoUtils.getHeader(tgHeadResponse.getAllResponseHeaders(), "Content-Location")
+            //if (contentLocation) {
+            //    tgUrl = contentLocation
+            //}
         }
         else {
             tgUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
         }
+        */
+        tgUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timegate")
         if (!tgUrl) {
             var doNotNeg = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "type")
             if (doNotNeg == "http://mementoweb.org/terms/donotnegotiate") {
@@ -356,16 +359,6 @@ Memento.prototype = {
     },
 
     /**
-     * A function to get the parameter value from a url.
-     * @param: url: the url with parameters.
-     * @param: name: the key/name of the parameter.
-     * @return: the value for the key/name.
-     */
-    getUrlParameter: function(url, name) {
-        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(url)||[,""])[1].replace(/\+/g, '%20'))||null;
-    },
-
-    /**
      * If the request url is a yahoo or google search result, this
      * function finds the original url. 
      * @param: the request url
@@ -376,7 +369,7 @@ Memento.prototype = {
             url = unescape(url.split("**")[1])
         }
         else if (url.search(this.googleSearchURLRE) >= 0) {
-            url = this.getUrlParameter(url, "url")
+            url = MementoUtils.getUrlParameter(url, "url")
         }
         return url
     },

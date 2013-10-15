@@ -57,6 +57,10 @@
         "message": "Got: current",
         "description": "Title text to display that the received resource is an original."
     },
+    "menuGetVersionOverview": {
+        "message": "Get Version Overview",
+        "description": "Title text to display the Timemap page."
+    },
     "menuGotMementoDatetimeTitle": {
         "message": "Got: $datetime$",
         "description": "Title text to display the received memento-datetime",

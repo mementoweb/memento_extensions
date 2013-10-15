@@ -7,7 +7,7 @@
             body {
                 font-family: Verdana,Arial,sans-serif;
                 font-size: 0.9em;
-                width: 600px;
+                width: 700px;
                 margin: 0 auto;
             }
             .memento {
@@ -33,7 +33,7 @@
                 background: #ffffff;
             }
             .archive span {
-                padding: 10px;
+                padding: 5px;
                 text-align: center;
             }
             .archive_basurl {
@@ -41,6 +41,28 @@
             }
             .archive_count {
                 float: right;
+            }
+            .meta_label {
+            }
+            .timemap_meta {
+                padding: 5px;
+            }
+            .meta_link {
+                width: 500px;
+                display: inline-block;
+                overflow: hidden;
+                float: right;
+            }
+            #timemap_overview {
+                padding-bottom: 10px;
+            }
+            #archive_stats {
+                padding-bottom: 10px;
+            }
+            .timemap_error {
+                top: 100px;
+                padding: 10px;
+                text-align: center;
             }
 
         </style>
@@ -51,15 +73,24 @@
     </head>
     <body>
         <div>
+            <h3>Overview</h3>
+            <div id="timemap_overview">
+            </div>
+        </div>
+        <hr/>
+        <div>
             <h3>Archive Statistics</h3>
             <p><i>The list below shows the number of mementos from each archive.</i></p>
-            <div id="archive_stats"></div>
+            <div id="archive_stats">
+                <img src='img/ajax-loader.gif'/>
+            </div>
         </div>
         <hr/>
         <div>
             <h3>Mementos</h3>
             <p><i>List of memento URLs sorted chronologically.</i></p>
-            <div id="mementos"></div>
+            <div id="mementos">
+            </div>
         </div>
     </body>
 </html>
