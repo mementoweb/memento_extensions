@@ -472,14 +472,14 @@ Memento.prototype = {
  * Handler for each tab or window created in chrome. 
  * Acts as an interface between the browser and the memento algorithm.
  */
-function MementoExtension(tabId) {
+function MementoTabs(tabId) {
     this.requestIds = []
     this.mem = new Memento()
     this.ui = new UI()
     this.getTimeGateFromStorage()
 }
 
-MementoExtension.prototype = {
+MementoTabs.prototype = {
 
     /**
      * This clears chrome's in-memory cache. Chrome has a caching mechanism 
@@ -706,7 +706,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
  */
 
 chrome.tabs.onCreated.addListener( function(tab) {
-    extensionTabs[tab.id] = new MementoExtension(tab.id)
+    extensionTabs[tab.id] = new MementoTabs(tab.id)
     if (tab.openerTabId && extensionTabs[tab.openerTabId]) {
         extensionTabs[tab.openerTabId].getDatetimeFromStorage()
     }
@@ -722,7 +722,7 @@ chrome.tabs.onCreated.addListener( function(tab) {
 chrome.tabs.onActivated.addListener( function(tab) {
     activeTabId = tab.tabId
     if (!extensionTabs[activeTabId]) {
-        extensionTabs[activeTabId] = new MementoExtension(tab.id)
+        extensionTabs[activeTabId] = new MementoTabs(tab.id)
     }
     extensionTabs[activeTabId].getDatetimeFromStorage()
     extensionTabs[activeTabId].getTimeGateFromStorage()
@@ -750,7 +750,7 @@ chrome.windows.onFocusChanged.addListener( function(windowId) {
             }
         }
         if (!extensionTabs[activeTabId]) {
-            extensionTabs[activeTabId] = new MementoExtension(activeTabId)
+            extensionTabs[activeTabId] = new MementoTabs(activeTabId)
         }
         extensionTabs[activeTabId].getDatetimeFromStorage()
         extensionTabs[activeTabId].getTimeGateFromStorage()

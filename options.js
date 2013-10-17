@@ -43,8 +43,6 @@ chrome.storage.local.get(null, function(items) {
     var selectedArchive = $($("#selectable li")[index])
     selectedArchive.addClass("ui-selected")
 
-    //var result = $( "#savedMementoTimeGate" ).empty();
-    //result.append( "<b>"+selectedArchive[0].textContent + "</b> with TimeGates at baseURI <i>" + mementoTimeGateUrlList[index] + "</i></br>");
     $("#optionsCurrentlyUsedArchiveUrl").empty()
     $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [selectedArchive[0].textContent, mementoTimeGateUrlList[index]]))
     
@@ -60,22 +58,33 @@ $(function() {
     $("#optionsCurrentlyUsedArchiveTitle").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveTitle"))
     $("#optionsSelectArchiveTitle").append(chrome.i18n.getMessage("optionsSelectArchiveTitle"))
     
-
     $("#optionsUpdateButtonText")
         .append(chrome.i18n.getMessage("optionsUpdateButtonText"))
         .button()
         .click( function(event) {
             event.preventDefault()
 
-            //var result = $( "#savedMementoTimeGate" ).empty();
-            $( "#selectable .ui-selected" ).each(function() {
-                var index = $( "#selectable li" ).index( this );
+            var timegateUrl = ""
+            var userTimeGate = $("#userTimeGate")[0].value
+            if (userTimeGate.trim() != "") {
+                if (userTimeGate.search("http://") != 0 && userTimeGate.search("https://") != 0) {
+                    $("#userTimeGateError").append("The entered URL is not valid.")
+                    $("#userTimeGateError").addClass("ui-state-error ui-corner-all")
+                    return
+                }
+                timegateUrl = userTimeGate
                 $("#optionsCurrentlyUsedArchiveUrl").empty()
-                $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [this.innerHTML, mementoTimeGateUrlList[index]]))
-                //result.append( "<b>"+this.innerHTML + "</b> with TimeGates at baseURI <i>" + mementoTimeGateUrlList[index] + "</i></br>");
-                chrome.storage.local.set({'mementoTimeGateUrl': mementoTimeGateUrlList[index]})
-            });
+                $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", ["Custom TimeGate", timegateUrl]))
+            }
 
-
+            if (timegateUrl == "") {
+                $( "#selectable .ui-selected" ).each(function() {
+                    var index = $( "#selectable li" ).index( this );
+                    $("#optionsCurrentlyUsedArchiveUrl").empty()
+                    $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [this.innerHTML, mementoTimeGateUrlList[index]]))
+                    timegateUrl = mementoTimeGateUrlList[index]
+                });
+            }
+            chrome.storage.local.set({'mementoTimeGateUrl': timegateUrl})
         })
 });
