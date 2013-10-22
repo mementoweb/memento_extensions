@@ -23,17 +23,7 @@
 
 
 $( function() {
-    var locUrl = document.location.href
-    var reqUrl = unescape(MementoUtils.getUrlParameter(locUrl, "org_url"))
-    if (!reqUrl || reqUrl == "undefined") {
-        return
-    }
-
     Timemap.getTimeGateFromStorage()
-    var r = new MementoHttpRequest()
-    r.doHttp(reqUrl, false, function(reqHeadResponse) {
-        Timemap.headRequest(reqUrl, reqHeadResponse)
-    })
 })
 
 var Timemap = {
@@ -127,6 +117,16 @@ var Timemap = {
             else {
                 Timemap.preferredTimeGateUrl = Timemap.aggregatorTimeGateUrl
             }
+            var locUrl = document.location.href
+            var reqUrl = unescape(MementoUtils.getUrlParameter(locUrl, "org_url"))
+            if (!reqUrl || reqUrl == "undefined") {
+                return
+            }
+
+            var r = new MementoHttpRequest()
+            r.doHttp(reqUrl, false, function(reqHeadResponse) {
+                Timemap.headRequest(reqUrl, reqHeadResponse)
+            })
         })
     },
 
@@ -231,7 +231,6 @@ var Timemap = {
                     uritmp+=d;
                     uri += uritmp;
                 }
-
             } else if (state == 'paramstart') {
                 while (d.match(/\s/) != null) d = data.shift();
                 if (d == ";") state = 'linkparam';
@@ -333,7 +332,6 @@ var Timemap = {
         console.log("Original url: " + orgUrl)
 
         var r = new MementoHttpRequest()
-
         r.doHttp(orgUrl, false, function(orgHeadResponse) {
             var timegateUrl = MementoUtils.getRelUriFromHeaders(orgHeadResponse.getAllResponseHeaders(), "timegate")
             Timemap.headTimegate(orgUrl, timegateUrl)
@@ -342,11 +340,17 @@ var Timemap = {
 
     headTimegate: function(orgUrl, timegateUrl) {
         if (!timegateUrl) {
+            if (!this.preferredTimeGateUrl) {
+            }
             timegateUrl = this.preferredTimeGateUrl + orgUrl
             if (timegateUrl.search(this.aggregatorTimeGateUrl) == 0) {
                 this.getTimemap(this.aggregatorTimeMapUrl + orgUrl)
                 return
             }
+        }
+        if (!timegateUrl) {
+            this.sendError("notimemap")
+            return
         }
         console.log("Timegate url: " + timegateUrl)
 
@@ -354,7 +358,7 @@ var Timemap = {
         r.doHttp(timegateUrl, false, function(tgHeadResponse) {
             var timemapUrl = MementoUtils.getRelUriFromHeaders(tgHeadResponse.getAllResponseHeaders(), "timemap")
             if (!timemapUrl) {
-                this.sendError("notimemap")
+                Timemap.sendError("notimemap")
                 return
             }
             Timemap.getTimemap(timemapUrl)

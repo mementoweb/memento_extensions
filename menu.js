@@ -688,8 +688,13 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         })
     }
     else if (clickedForTimemap) {
-        chrome.tabs.create({"url": "timemap.html?org_url="+escape(clickedUrl)}, function(window) {
-        })
+        chrome.tabs.executeScript(null, { file: "lib/jquery-ui/js/jquery-1.9.1.js" }, function() {
+            chrome.tabs.executeScript(null, { file: "lib/jquery-ui/js/jquery-ui-1.10.3.custom.min.js" }, function() {
+                chrome.tabs.insertCSS(null, { file: "lib/jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.css" }, function() {
+                    chrome.tabs.executeScript(null, { file: "content_script.js" });
+                });
+            });
+        });
     }
 })
 
