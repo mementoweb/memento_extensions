@@ -69,6 +69,24 @@ MementoHttpRequest.prototype = {
 
 MementoUtils = {
 
+
+    getProtocolAndBaseUrl: function(url) {
+            var protocol = ""
+            if (url.slice(0,7) == "http://") {
+                protocol = "http://"
+            }
+            else if (details.url.slice(0,8) == "https://") {
+                protocol = "https://"
+            }
+            if (protocol == "") {
+                return false
+            }
+            var baseUrl = url.replace(protocol, "")
+            baseUrl = baseUrl.split("/")[0] 
+
+            return [protocol, baseUrl]
+    },
+
     /**
      * A function to get the parameter value from a url.
      * @param: url: the url with parameters.

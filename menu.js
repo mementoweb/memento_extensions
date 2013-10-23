@@ -417,12 +417,12 @@ Memento.prototype = {
      * @param: type: the type of the memento resource to be requested. 
      */ 
     setAcceptDatetime: function(type) {
-        if (type == "calendar") {
-            this.acceptDatetime = this.calendarDatetime
-        }
-        else if (type == "last-memento") {
+        if (type == "last-memento") {
             this.acceptDatetime = new Date()
             this.specialDatetime = true
+        }
+        else {
+            this.acceptDatetime = this.calendarDatetime
         }
     },
 
@@ -817,6 +817,8 @@ chrome.storage.onChanged.addListener( function(changes, namespace) {
         chrome.storage.local.set(val)
 
         extensionTabs[activeTabId].mem.calendarDatetime = new Date(mementoAcceptDatetime)
+        extensionTabs[activeTabId].mem.setAcceptDatetime()
+
         if (extensionTabs[activeTabId].mem.mementoDatetime) {
             extensionTabs[activeTabId].mem.isDatetimeModified = true
         }
@@ -878,8 +880,17 @@ chrome.webRequest.onBeforeRequest.addListener( function(details) {
             * the memento with the url of the embedded resource. The 
             * embedded resources will have the same host if it's rewritten.
             */
+            console.log(extensionTabs[details.tabId].mem.mementoBaseUrl, details.url)
+            var urlParts = MementoUtils.getProtocolAndBaseUrl(details.url)
+            var baseUrl = details.url
+            var protocol = ""
+            if (urlParts) {
+                protocol = urlParts[0]
+                baseUrl = urlParts[1]
+            }
+            console.log(baseUrl.search(extensionTabs[details.tabId].mem.mementoBaseUrl))
             if (!extensionTabs[details.tabId].mem.mementoBaseUrl 
-                || details.url.search(extensionTabs[details.tabId].mem.mementoBaseUrl) == 0) {
+                || baseUrl.search(extensionTabs[details.tabId].mem.mementoBaseUrl) >= 0) {
 
                 extensionTabs[details.tabId].mem.shouldProcessEmbeddedResources = false
                 return
@@ -962,6 +973,7 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
             * setting base url of the memento
             * will be used to determine if the embedded resources are processed.
             */
+            /*
             var protocol = ""
             if (details.url.slice(0,7) == "http://") {
                 protocol = "http://"
@@ -970,8 +982,16 @@ chrome.webRequest.onHeadersReceived.addListener( function(details) {
                 protocol = "https://"
             }
             var baseUrl = details.url.replace(protocol, "")
-            baseUrl = protocol + baseUrl.split("/")[0] 
-
+            //baseUrl = protocol + baseUrl.split("/")[0] 
+            baseUrl = baseUrl.split("/")[0] 
+            */
+            var urlParts = MementoUtils.getProtocolAndBaseUrl(details.url)
+            var baseUrl = details.url
+            var protocol = ""
+            if (urlParts) {
+                protocol = urlParts[0]
+                baseUrl = urlParts[1]
+            }
             extensionTabs[details.tabId].mem.setMementoFlags()
             extensionTabs[details.tabId].mem.isPsuedoMemento = false
             extensionTabs[details.tabId].mem.setMementoInfo(orgUrl, tgUrl, details.url, h.value, baseUrl)
