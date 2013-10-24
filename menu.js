@@ -33,7 +33,6 @@ UI.prototype = {
     mementoMenuIds: [],
     lastMementoMenuIds: [],
     mementoDatetimeMenuIds: [],
-    timemapMenuIds: [],
 
     /**
      * Creates the context menu on right click. 
@@ -101,9 +100,6 @@ UI.prototype = {
                 enabled = false
                 this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled))
 
-                // TIMEMAP
-                var title = chrome.i18n.getMessage("menuGetVersionOverview")
-                this.timemapMenuIds.push(this.createContextMenuEntry(title, t, true))
             }
             else if (c == "link") {
                 // SELECTED MEMENTO DATETIME
@@ -142,7 +138,6 @@ UI.prototype = {
         this.mementoMenuIds = []
         this.lastMementoMenuIds = []
         this.mementoDatetimeMenuIds = []
-        this.timemapMenuIds = []
         this.updateContextMenu(calendarDatetime, mementoDatetime, isMementoActive, isPsuedoMemento, isDatetimeModified)
 
         if (mementoDatetime || isMementoActive) {
@@ -215,6 +210,7 @@ Memento.prototype = {
     lastMementoUrl: false,
     specialDatetime: false,
     isDatetimeModified: false,
+    mementoExtensionNavigation: false,
     visitedUrls: {},
     
     /**
@@ -571,7 +567,6 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
     var clickedForOriginal = false
     var clickedForMemento = false
     var clickedForLastMemento = false
-    var clickedForTimemap = false
     extensionTabs[tab.id].mem.specialDatetime = false
 
     for (var i=0, id; id=extensionTabs[tab.id].ui.originalMenuIds[i]; i++) {
@@ -589,12 +584,6 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
     for (var i=0, id; id=extensionTabs[tab.id].ui.lastMementoMenuIds[i]; i++) {
         if (info['menuItemId'] == id) {
             clickedForLastMemento = true
-            break
-        }
-    }
-    for (var i=0, id; id=extensionTabs[tab.id].ui.timemapMenuIds[i]; i++) {
-        if (info['menuItemId'] == id) {
-            clickedForTimemap = true
             break
         }
     }
@@ -686,15 +675,6 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                 return
             })
         })
-    }
-    else if (clickedForTimemap) {
-        chrome.tabs.executeScript(null, { file: "lib/jquery-ui/js/jquery-1.9.1.js" }, function() {
-            chrome.tabs.executeScript(null, { file: "lib/jquery-ui/js/jquery-ui-1.10.3.custom.min.js" }, function() {
-                chrome.tabs.insertCSS(null, { file: "lib/jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.css" }, function() {
-                    chrome.tabs.executeScript(null, { file: "content_script.js" });
-                });
-            });
-        });
     }
 })
 
@@ -880,7 +860,6 @@ chrome.webRequest.onBeforeRequest.addListener( function(details) {
             * the memento with the url of the embedded resource. The 
             * embedded resources will have the same host if it's rewritten.
             */
-            console.log(extensionTabs[details.tabId].mem.mementoBaseUrl, details.url)
             var urlParts = MementoUtils.getProtocolAndBaseUrl(details.url)
             var baseUrl = details.url
             var protocol = ""
@@ -888,7 +867,6 @@ chrome.webRequest.onBeforeRequest.addListener( function(details) {
                 protocol = urlParts[0]
                 baseUrl = urlParts[1]
             }
-            console.log(baseUrl.search(extensionTabs[details.tabId].mem.mementoBaseUrl))
             if (!extensionTabs[details.tabId].mem.mementoBaseUrl 
                 || baseUrl.search(extensionTabs[details.tabId].mem.mementoBaseUrl) >= 0) {
 
@@ -1128,6 +1106,9 @@ chrome.webNavigation.onCommitted.addListener( function(details) {
     }
 })
 
+chrome.webNavigation.onCompleted.addListener( function(details) {
+    extensionTabs[details.tabId].mem.unsetAcceptDatetime()
+})
 /*************** On First Install *****************/
 /*
  * When installed for the first time, the menu is initialized to 
