@@ -47,17 +47,17 @@
             <li class="ui-widget-content">Archive-It</li>
         </ol>
         <br/>
-        Custom TimeGate:
-        <p style="font-size: 0.9em">
-            <i>
+        Or enter the TimeGate URL of a web archive not listed above:
+        <p class="ui-state-highlight ui-corner-all" style="font-size: 0.9em; padding: 10px;">
                 Please be aware that the timegate entered below should be memento complient
-                and send all the required memento headers.
-                Please refer to the Memento Internet Draft for more information
-                http://www.mementoweb.org/guide/rfc/ID/
-            </i>
+                and respond with the required memento headers.
+                Please refer to the <a href='http://www.mementoweb.org/guide/rfc/ID/'>Memento Internet Draft</a> for more information.
             <br/>
             <br/>
-            <b>Eg: http://mementoproxy.lanl.gov/aggr/timegate/</b>
+            <b>Example TimeGate URL: http://mementoproxy.lanl.gov/aggr/timegate/</b>
+            <br/>
+            <br/>
+            Please ensure the TimeGate URL ends with a "/" as shown in the example. To revert back to any of the default TimeGates above, please ensure the text box below is empty.
         </p>
         <input type="text" id="userTimeGate" name="userTimeGate" size="90" title="eg: http://mementoproxy.lanl.gov/aggr/timegate/" />
         <div id="userTimeGateError" style="text-align: center; padding: 10px; width: 70%;"></div>
