@@ -63,12 +63,15 @@ $(function() {
         .button()
         .click( function(event) {
             event.preventDefault()
+            $("#userTimeGateError").empty()
+            $("#userTimeGateError").removeClass("ui-state-error ui-corner-all")
 
             var timegateUrl = ""
             var userTimeGate = $("#userTimeGate")[0].value
             if (userTimeGate.trim() != "") {
-                if (userTimeGate.search("http://") != 0 && userTimeGate.search("https://") != 0) {
-                    $("#userTimeGateError").append("The entered URL is not valid.")
+                var userTimeGateLen = userTimeGate.length
+                if (userTimeGate.search("http://") != 0 && userTimeGate.search("https://") != 0 || userTimeGate[userTimeGateLen-1] != "/") {
+                    $("#userTimeGateError").append(chrome.i18n.getMessage("optionsUnlistedArchiveUrlError"))
                     $("#userTimeGateError").addClass("ui-state-error ui-corner-all")
                     return
                 }

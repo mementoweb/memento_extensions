@@ -76,7 +76,7 @@
         "description": "The title for the options pane."
     },
     "optionsArchiveDescription": {
-        "message": "In many cases, web pages do not provide information about the web archive that should be used to gain access to their history. The Memento extension allows selecting a default web archive to use in those cases:<br/><br/><b>* Memento Aggregator:</b> When selecting this option, page history available in several web archives is taken into account. This option improves the chances to retrieve an archived page that is close to the selected time travel date. It is the recommended option.<br/><b>* Specific Archive:</b> When selecting this option, only page history available in the chosen archive is taken into account.<br/><br/>",
+        "message": "In many cases, web pages do not provide information about the web archive that should be used to gain access to their history. The Memento extension allows selecting a default web archive to use in those cases:<br/><br/><b>* Memento Aggregator:</b> When selecting this option, page history available in several web archives is taken into account. This option improves the chances to retrieve an archived page that is close to the selected time travel date. It is the recommended option.<br/><b>* Specific Archive:</b> When selecting this option, only page history available in the chosen archive is taken into account.<br/><b>* Unlisted Archive:</b> This option is provided for those familiar with the Memento protocol. Enter the baseURI of TimeGates of a web archive that is not listed below in the text box, making sure that baseURI ends with a \"/\". Be aware that the TimeGates available at that baseURI must be compliant with the <a href='http://www.mementoweb.org/guide/rfc/ID/'>Memento protocol</a>. To revert back to any of the listed archives clear the text box.<br/><br/>",
         "description": "This is the text that explains the individual archive choices"
     },
     "optionsCurrentlyUsedArchiveTitle": {
@@ -84,7 +84,7 @@
         "description": "Title that mentions the currently chosen web archive"
     },
     "optionsCurrentlyUsedArchiveUrl": {
-        "message": "<b>$archiveName$</b> with TimeGate at baseURI <i>$archiveBaseUri$</i>",
+        "message": "<b>$archiveName$</b> with TimeGates at baseURI <i>$archiveBaseUri$</i>",
         "description": "The text that displays the archive name and it's base uri",
         "placeholders": {
             "archiveName": {
@@ -96,11 +96,15 @@
         }
     },
     "optionsSelectArchiveTitle": {
-        "message": "Select the web archive you would like to include:",
+        "message": "Select the web archive you would like to use:",
         "description": "Title that mentions the text to choose a web archive"
     },
     "optionsUpdateButtonText": {
         "message": "Update",
         "description": "The text for the update archive selection button"
+    },
+    "optionsUnlistedArchiveUrlError": {
+        "message": "The entered TimeGate baseURL is not valid.",
+        "description": "Invalid url error message for custom timegate entry."
     }
 }

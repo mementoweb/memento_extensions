@@ -40,26 +40,13 @@
         <p id="optionsSelectArchiveTitle"></p>
         <ol id="selectable">
             <li class="ui-widget-content">Memento Aggregator (recommended)</li>
-            <li class="ui-widget-content">Internet Archive</li>
-            <li class="ui-widget-content">UK Web Archive</li>
-            <li class="ui-widget-content">UK National Archives</li>
-            <li class="ui-widget-content">Archive.is</li>
             <li class="ui-widget-content">Archive-It</li>
+            <li class="ui-widget-content">Archive.is</li>
+            <li class="ui-widget-content">Internet Archive</li>
+            <li class="ui-widget-content">UK National Archives</li>
+            <li class="ui-widget-content">UK Web Archive</li>
         </ol>
-        <br/>
-        Or enter the TimeGate URL of a web archive not listed above:
-        <p class="ui-state-highlight ui-corner-all" style="font-size: 0.9em; padding: 10px;">
-                Please be aware that the timegate entered below should be memento complient
-                and respond with the required memento headers.
-                Please refer to the <a href='http://www.mementoweb.org/guide/rfc/ID/'>Memento Internet Draft</a> for more information.
-            <br/>
-            <br/>
-            <b>Example TimeGate URL: http://mementoproxy.lanl.gov/aggr/timegate/</b>
-            <br/>
-            <br/>
-            Please ensure the TimeGate URL ends with a "/" as shown in the example. To revert back to any of the default TimeGates above, please ensure the text box below is empty.
-        </p>
-        <input type="text" id="userTimeGate" name="userTimeGate" size="90" title="eg: http://mementoproxy.lanl.gov/aggr/timegate/" />
+        <input type="text" id="userTimeGate" name="userTimeGate" size="45" style="font-size: 1.1em;padding: 6px;" title="eg: http://mementoproxy.lanl.gov/aggr/timegate/" />
         <div id="userTimeGateError" style="text-align: center; padding: 10px; width: 70%;"></div>
         <button id="optionsUpdateButtonText"></button>
     </body>
