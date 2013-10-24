@@ -1107,6 +1107,9 @@ chrome.webNavigation.onCommitted.addListener( function(details) {
 })
 
 chrome.webNavigation.onCompleted.addListener( function(details) {
+    if (extensionTabs[details.tabId] == undefined) {
+        return
+    }
     extensionTabs[details.tabId].mem.unsetAcceptDatetime()
 })
 /*************** On First Install *****************/
