@@ -1112,6 +1112,7 @@ chrome.webNavigation.onCompleted.addListener( function(details) {
     }
     extensionTabs[details.tabId].mem.unsetAcceptDatetime()
 })
+
 /*************** On First Install *****************/
 /*
  * When installed for the first time, the menu is initialized to 

@@ -77,7 +77,7 @@ $(function() {
                 }
                 timegateUrl = userTimeGate
                 $("#optionsCurrentlyUsedArchiveUrl").empty()
-                $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", ["Custom TimeGate", timegateUrl]))
+                $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", ["Unlisted Archive", timegateUrl]))
             }
 
             if (timegateUrl == "") {
