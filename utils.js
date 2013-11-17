@@ -34,18 +34,18 @@ MementoHttpRequest.prototype = {
      * This function wraps the jQuery ajax method. The Accept-Datetime header
      * can be optionally set.
      * @param: uri: the uri to request
-     * @param: calendarDatetime: the accept-datetime to set.
+     * @param: datetime: the accept-datetime to set.
      * @param: callback: the callback function to execute on response received. 
      */
 
-    doHttp: function(uri, calendarDatetime, callback, typ, waitLonger) {
+    doHttp: function(uri, datetime, callback, typ, waitLonger) {
         var tOut = 8000
         if (waitLonger) {
             tOut = 30000
         }
         var hdrs = {}
-        if (calendarDatetime) {
-            hdrs = {'Accept-Datetime': calendarDatetime.toGMTString()}
+        if (datetime) {
+            hdrs = {'Accept-Datetime': datetime.toGMTString()}
         }
         if (!typ) {
             typ = "HEAD"
@@ -64,7 +64,6 @@ MementoHttpRequest.prototype = {
             timeout: tOut
         })
     }
-
 }
 
 MementoUtils = {

@@ -53,6 +53,14 @@
         "message": "Get at current time",
         "description": "Title text to get the original resource in the menu."
     },
+    "menuGetPublishedDatetimeTitle": {
+        "message": "Get at published time",
+        "description": "Title text to get the resource at the published time in the menu."
+    },
+    "menuGetAccessedDatetimeTitle": {
+        "message": "Get at accessed time",
+        "description": "Title text to get the link resource at the accessed time in the menu."
+    },
     "menuGotCurrentTitle": {
         "message": "Got: current",
         "description": "Title text to display that the received resource is an original."
