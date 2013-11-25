@@ -54,12 +54,21 @@
         "description": "Title text to get the original resource in the menu."
     },
     "menuGetPublishedDatetimeTitle": {
-        "message": "Get at published time",
+        "message": "Get at page date",
         "description": "Title text to get the resource at the published time in the menu."
     },
     "menuGetAccessedDatetimeTitle": {
-        "message": "Get at accessed time",
+        "message": "Get at link date",
         "description": "Title text to get the link resource at the accessed time in the menu."
+    },
+    "menuGetVersionUrlTitle": {
+        "message": "Get from $baseUrl$",
+        "description": "Title text to get the version url resource in the menu.",
+        "placeholders": {
+            "baseUrl": {
+                "content": "$1"
+            }
+        }
     },
     "menuGotCurrentTitle": {
         "message": "Got: current",
