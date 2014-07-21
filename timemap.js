@@ -34,6 +34,8 @@ var Timemap = {
     timemapPage: 0,
     aggregatorTimeGateUrl: "http://mementoproxy.lanl.gov/aggr/timegate/",
     aggregatorTimeMapUrl: "http://mementoproxy.lanl.gov/aggr/timemap/link/1/",
+    //aggregatorTimeGateUrl: "http://mementoproxy.cs.odu.edu/aggr/timegate/",
+    //aggregatorTimeMapUrl: "http://mementoproxy.cs.odu.edu/aggr/timemap/link/1/",
     preferredTimeGateUrl: false,
 
     createTimeMapHtmlLayout: function() {
@@ -126,7 +128,7 @@ var Timemap = {
             var r = new MementoHttpRequest()
             r.doHttp(reqUrl, false, function(reqHeadResponse) {
                 Timemap.headRequest(reqUrl, reqHeadResponse)
-            })
+            }, 'HEAD', true)
         })
     },
 
@@ -136,7 +138,7 @@ var Timemap = {
         archiveIcons["http://wayback.archive-it.org/"] = "img/archives/archive-it.png";
         archiveIcons["http://webarchive.nationalarchives.gov.uk/"] = "img/archives/ukna.png";
         archiveIcons["http://www.webarchive.org.uk"] = "img/archives/ukwa.png";
-        archiveIcons["http://archive.is/"] = "img/archives/archive-is.png";
+        archiveIcons["http://archive.today/"] = "img/archives/archive-is.png";
         archiveIcons["http://webarchive.loc.gov/"] = "img/archives/loc.png";
         archiveIcons["http://wayback.vefsafn.is/"] = "img/archives/icelandic-archive.png";
         archiveIcons["http://wayback.webarchiv.cz/"] = "img/archives/czech-archive.png";
@@ -358,7 +360,7 @@ var Timemap = {
                 return
             }
             Timemap.getTimemap(timemapUrl)
-        })
+        }, 'HEAD', true)
     },
 
     getTimemap: function(timemapUrl) {
