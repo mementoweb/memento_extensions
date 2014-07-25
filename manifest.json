@@ -3,7 +3,7 @@
     "name": "__MSG_extensionName__",
     "default_locale": "en",
     "description": "__MSG_extensionDescription__",
-    "version": "0.2.1002",
+    "version": "0.2.5",
 
     "permissions": [
         "http://*/*",
@@ -26,12 +26,11 @@
         ]
     },
 
-    "web_accessible_resources": ["timemap.html"],
-
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["contentScript.js"]
+            "js": ["contentScript.js"],
+            "run_at": "document_end"
         }
     ],
 

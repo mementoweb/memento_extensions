@@ -58,7 +58,9 @@ chrome.storage.local.get(null, function(items) {
         changeMonth: true,
         changeYear: true,
         dateFormat: "yy-mm-dd",
-        maxDate: "-1d",
+        maxDate: "-1m",
+        minDate: new Date("1996-01-01"),
+        yearRange: "1996:2014",
         altField: "#dateBox",
         defaultDate: selectedDate,
         onChangeMonthYear: function(year, month, inst) {

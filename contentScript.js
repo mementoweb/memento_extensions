@@ -3,14 +3,17 @@ function getAllLinkVersionDate() {
     var hrefs = document.getElementsByTagName("a")
     var hrefDatetime = {}
     for (var i=0, a; a=hrefs[i]; i++) {
+        /*
         if (hrefDatetime[a['href']]) {
             continue;
         }
-        hrefDatetime[a['href']] = {}
+        */
+        if (!hrefDatetime[a['href']]) {
+            hrefDatetime[a['href']] = {}
+        }
         hrefDatetime[a['href']]['versionDate'] = (a.getAttribute('data-versiondate') != null) ? a.getAttribute('data-versiondate') : false 
         hrefDatetime[a['href']]['versionUrl'] = (a.getAttribute('data-versionurl') != null) ? a.getAttribute('data-versionurl') : false 
     }
-    //console.log(hrefDatetime)
     return hrefDatetime
 }
 
@@ -24,8 +27,19 @@ function getMetaVersionDate() {
             break;
         }
     }
-    //console.log(metaDatetime)
     return metaDatetime
 }
-chrome.runtime.sendMessage({'linkVersionDates': getAllLinkVersionDate()})
-chrome.runtime.sendMessage({'metaVersionDate': getMetaVersionDate()})
+
+function sendMetaInfoToExtension() {
+    chrome.runtime.sendMessage({'linkVersionDates': getAllLinkVersionDate()});
+    chrome.runtime.sendMessage({'metaVersionDate': getMetaVersionDate()});
+}
+
+if (document.readyState == "complete") {
+    sendMetaInfoToExtension();
+}
+else {
+    window.addEventListener("load", function() {
+        setTimeout(sendMetaInfoToExtension(), 0);
+    });
+}

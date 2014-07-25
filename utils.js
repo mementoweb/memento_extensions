@@ -39,7 +39,7 @@ MementoHttpRequest.prototype = {
      */
 
     doHttp: function(uri, datetime, callback, typ, waitLonger) {
-        var tOut = 8000
+        var tOut = 15000
         if (waitLonger) {
             tOut = 30000
         }
@@ -74,7 +74,7 @@ MementoUtils = {
             if (url.slice(0,7) == "http://") {
                 protocol = "http://"
             }
-            else if (details.url.slice(0,8) == "https://") {
+            else if (url.slice(0,8) == "https://") {
                 protocol = "https://"
             }
             if (protocol == "") {
