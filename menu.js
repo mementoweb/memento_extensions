@@ -71,7 +71,7 @@ UI.prototype = {
 
         for (var i=0, c; c=this.contexts[i]; i++) {
             t = [];
-            if (c == "page") {
+            if (c == "page" || c == "link") {
                 t.push(c);
                 // SELECTED MEMENTO DATETIME
                 title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", calendarDatetime.toGMTString());
@@ -83,13 +83,74 @@ UI.prototype = {
                 enabled = true;
                 this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled));
 
+                // Accessed Datetime
+                enabled = false;
+                if (c == "link") {
+                    for (url in this.linkVersionDates) {
+                        var versionDate;
+                        if (this.linkVersionDates[url]['versionDate'] != false) {
+                            enabled = true;
+                            versionDate = this.linkVersionDates[url]['versionDate'];
+                            if (typeof(versionDate) == "string") {
+                                versionDate = new Date(versionDate);
+                            }
+                            title = chrome.i18n.getMessage("menuGetAccessedDatetimeTitle", versionDate.toGMTString());
+                        }
+                        else {
+                            enabled = false;
+                            title = chrome.i18n.getMessage("menuGetAccessedDatetimeTitle", "...");
+                        }   
+                        this.linkVersionDatesMenuIds.push(this.createContextMenuEntry(title, t, enabled, [url]));
+                    }
+                }
+                else {
+                    title = chrome.i18n.getMessage("menuGetAccessedDatetimeTitle", "...");
+                    this.linkVersionDatesMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                }
+
+                // Published Datetime
+                enabled = false;
+                if (this.metaVersionDate && this.metaVersionDate.valueOf() != NaN) {
+                    enabled = true;
+                    title = chrome.i18n.getMessage("menuGetPublishedDatetimeTitle", this.metaVersionDate.toGMTString());
+                    this.metaVersionDateMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                }
+                else {
+                    title = chrome.i18n.getMessage("menuGetPublishedDatetimeTitle", "...");
+                    this.metaVersionDateMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                }
+
                 // CURRENT TIME
+                chrome.contextMenus.create({"type": "separator", "contexts": [c]});
                 title = chrome.i18n.getMessage("menuGetCurrentTitle");
-                var enabled = false;
+                enabled = false;
                 if (isMementoActive || isDatetimeModified || mementoDatetime) {
                     enabled = true;
                 }
                 this.originalMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+
+                // Version URL
+                chrome.contextMenus.create({"type": "separator", "contexts": [c]});
+                enabled = false;
+                if (c == "link") {
+                    for (url in this.linkVersionDates) {
+                        if (this.linkVersionDates[url]['versionUrl'] != false) {
+                            enabled = true;
+
+                            var urlParts = MementoUtils.getProtocolAndBaseUrl(this.linkVersionDates[url]['versionUrl']);
+                            title = chrome.i18n.getMessage("menuGetVersionUrlTitle", urlParts[1]);
+                        }
+                        else {
+                            enabled = false;
+                            title = chrome.i18n.getMessage("menuGetVersionUrlTitle", "archive ...");
+                        }
+                        this.linkVersionUrlMenuIds.push(this.createContextMenuEntry(title, t, enabled, [url]));
+                    }
+                }
+                else {
+                    title = chrome.i18n.getMessage("menuGetVersionUrlTitle", "archive ...");
+                    this.linkVersionUrlMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                }
 
                 // MEMENTO DATETIME
                 chrome.contextMenus.create({"type": "separator", "contexts": [c]});
@@ -101,12 +162,12 @@ UI.prototype = {
                     title = chrome.i18n.getMessage("menuGotMementoDatetimeTitle", mementoDatetime);
                 }
                 else {
-                    title = chrome.i18n.getMessage("menuGotCurrentTitle");
+                    title = chrome.i18n.getMessage("menuGotCurrentTitle", new Date().toGMTString());
                 }
                 enabled = false;
                 this.mementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled));
-            }
-            else if (c == "link") {
+
+                /*
                 // SELECTED MEMENTO DATETIME
                 t.push(c);
                 title = chrome.i18n.getMessage("menuGetNearDatetimeTitle", calendarDatetime.toGMTString());
@@ -122,59 +183,23 @@ UI.prototype = {
                 title = chrome.i18n.getMessage("menuGetCurrentTitle");
                 var enabled = false;
                 if (mementoDatetime) {
-                    enabled = true;
+                enabled = true;
                 }
+
                 this.originalMenuIds.push(this.createContextMenuEntry(title, t, enabled));
-                
+
                 var separatorPresent = false;
                 // Published Datetime
                 if (this.metaVersionDate && this.metaVersionDate.valueOf() != NaN) {
-                    if (!separatorPresent) {
-                        chrome.contextMenus.create({"type": "separator", "contexts": [c]});
-                        separatorPresent = true;
-                    }
-                    title = chrome.i18n.getMessage("menuGetPublishedDatetimeTitle", this.metaVersionDate.toGMTString());
-                    enabled = true;
-                    this.metaVersionDateMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                if (!separatorPresent) {
+                chrome.contextMenus.create({"type": "separator", "contexts": [c]});
+                separatorPresent = true;
                 }
-
-                // Accessed Datetime
+                title = chrome.i18n.getMessage("menuGetPublishedDatetimeTitle", this.metaVersionDate.toGMTString());
                 enabled = true;
-                for (url in this.linkVersionDates) {
-                    targetUrl = [];
-                    if (this.linkVersionDates[url]['versionDate'] != false) {
-                        if (!separatorPresent) {
-                            chrome.contextMenus.create({"type": "separator", "contexts": [c]});
-                            separatorPresent = true;
-                        }
-                        targetUrl.push(url);
-                        if (targetUrl.length <= 0) {
-                            enabled = false;
-                        }
-                        var versionDate = this.linkVersionDates[url]['versionDate'];
-                        if (typeof(versionDate) == "string") {
-                            versionDate = new Date(versionDate);
-                        }
-                        title = chrome.i18n.getMessage("menuGetAccessedDatetimeTitle", versionDate.toGMTString());
-                        this.linkVersionDatesMenuIds.push(this.createContextMenuEntry(title, t, enabled, targetUrl));
-                    }
+                this.metaVersionDateMenuIds.push(this.createContextMenuEntry(title, t, enabled));
                 }
-
-                // Version URL
-                enabled = true;
-                for (url in this.linkVersionDates) {
-                    targetUrl = [];
-                    if (this.linkVersionDates[url]['versionUrl'] != false) {
-                        targetUrl.push(url);
-                        if (targetUrl.length <= 0) {
-                            enabled = false;
-                        }
-                        
-                        var urlParts = MementoUtils.getProtocolAndBaseUrl(this.linkVersionDates[url]['versionUrl']);
-                        title = chrome.i18n.getMessage("menuGetVersionUrlTitle", urlParts[1]);
-                        this.linkVersionUrlMenuIds.push(this.createContextMenuEntry(title, t, enabled, targetUrl));
-                    }
-                }
+                */
             }
         }
     },
@@ -244,8 +269,7 @@ function Memento() {
 
 Memento.prototype = {
 
-    aggregatorUrl: "http://mementoproxy.lanl.gov/aggr/timegate/",
-    //wikipediaTimegate: "http://mementoproxy.lanl.gov/wiki/timegate/",
+    aggregatorUrl: "http://mementoweb.org/timegate/",
     wikipediaTemplateUrl: ".wikipedia.org/wiki/",
     wikipediaLanguageRE: new RegExp("([a-z]{0,2})\.wikipedia.org/"),
     wikipediaMementoBaseRE: new RegExp("[a-z]{0,2}\.wikipedia.org/w/index.php"),

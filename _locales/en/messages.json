@@ -20,7 +20,7 @@
         "description": "Small description text for extension usage"
     },
     "popupSetDatetime": {
-        "message": "Set",
+        "message": "Save",
         "description": "Label for the set datetime button"
     },
     "popupCancelDatetime": {
@@ -33,8 +33,8 @@
         "description": "Title text for the last memento menu option."
     },
     "menuGetNearDatetimeTitle": {
-        "message": "Get near $datetime$",
-        "description": "Title text to get the resource near the set datetime in menu",
+        "message": "Get near saved date $datetime$",
+        "description": "Title text to get the resource near the saved datetime in menu",
         "placeholders": {
             "datetime": {
                 "content": "$1"
@@ -42,19 +42,19 @@
         }
     },
     "menuGetNearCurrentTitle": {
-        "message": "Get near current time",
+        "message": "Get near current date",
         "description": "Title text for the last memento menu option."
     },
     "menuGotUnknownDateTitle": {
-        "message": "Got unknown date: Memento-Datetime not provided",
+        "message": "ⓘ Got unknown date: Memento-Datetime not provided",
         "description": "Title text for to display non-native memento datetime."
     },
     "menuGetCurrentTitle": {
-        "message": "Get at current time",
+        "message": "Get at current date",
         "description": "Title text to get the original resource in the menu."
     },
     "menuGetPublishedDatetimeTitle": {
-        "message": "Get at page date $datetime$",
+        "message": "Get near page date $datetime$",
         "description": "Title text to get the resource at the published time in the menu.",
         "placeholders": {
             "datetime": {
@@ -63,7 +63,7 @@
         }
     },
     "menuGetAccessedDatetimeTitle": {
-        "message": "Get at link date $datetime$",
+        "message": "Get near link date $datetime$",
         "description": "Title text to get the link resource at the accessed time in the menu.",
         "placeholders": {
             "datetime": {
@@ -81,15 +81,16 @@
         }
     },
     "menuGotCurrentTitle": {
-        "message": "Got: current",
-        "description": "Title text to display that the received resource is an original."
-    },
-    "menuGetVersionOverview": {
-        "message": "Get Version Overview",
-        "description": "Title text to display the Timemap page."
+        "message": "ⓘ Got Original $datetime$",
+        "description": "Title text to display that the received resource is an original.",
+        "placeholders": {
+            "datetime": {
+                "content": "$1"
+            }
+        }
     },
     "menuGotMementoDatetimeTitle": {
-        "message": "Got: $datetime$",
+        "message": "ⓘ Got Memento $datetime$",
         "description": "Title text to display the received memento-datetime",
         "placeholders": {
             "datetime": {

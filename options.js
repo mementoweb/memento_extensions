@@ -22,7 +22,7 @@
  */
 
 var mementoTimeGateUrlList = [
-    "http://mementoproxy.lanl.gov/aggr/timegate/",
+    "http://mementoweb.org/timegate/",
     "http://wayback.archive-it.org/all/",
     "http://archive.is/timegate/",
     "http://web.archive.org/web/",
