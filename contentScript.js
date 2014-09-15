@@ -11,8 +11,12 @@ function getAllLinkVersionDate() {
         if (!hrefDatetime[a['href']]) {
             hrefDatetime[a['href']] = {}
         }
-        hrefDatetime[a['href']]['versionDate'] = (a.getAttribute('data-versiondate') != null) ? a.getAttribute('data-versiondate') : false 
-        hrefDatetime[a['href']]['versionUrl'] = (a.getAttribute('data-versionurl') != null) ? a.getAttribute('data-versionurl') : false 
+        if (!hrefDatetime[a['href']]['versionDate']) {
+            hrefDatetime[a['href']]['versionDate'] = (a.getAttribute('data-versiondate') != null) ? a.getAttribute('data-versiondate') : false 
+        }
+        if (!hrefDatetime[a['href']]['versionUrl']) {
+            hrefDatetime[a['href']]['versionUrl'] = (a.getAttribute('data-versionurl') != null) ? a.getAttribute('data-versionurl') : false 
+        }
     }
     return hrefDatetime
 }

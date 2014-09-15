@@ -53,6 +53,15 @@
         "message": "Get at current date",
         "description": "Title text to get the original resource in the menu."
     },
+    "menuGetMementoDatetimeTitle": {
+        "message": "Get near memento date $datetime$",
+        "description": "Title text to get the resource at the memento time in the menu.",
+        "placeholders": {
+            "datetime": {
+                "content": "$1"
+            }
+        }
+    },
     "menuGetPublishedDatetimeTitle": {
         "message": "Get near page date $datetime$",
         "description": "Title text to get the resource at the published time in the menu.",

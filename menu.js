@@ -33,6 +33,7 @@ UI.prototype = {
     mementoMenuIds: [],
     lastMementoMenuIds: [],
     mementoDatetimeMenuIds: [],
+    getMementoDatetimeMenuIds: [],
     metaVersionDateMenuIds: [],
     linkVersionDatesMenuIds: [],
     linkVersionUrlMenuIds: [],
@@ -82,6 +83,18 @@ UI.prototype = {
                 title = chrome.i18n.getMessage("menuGetNearCurrentTitle");
                 enabled = true;
                 this.lastMementoMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+
+                // Get at Memento Datetime
+                enabled = false;
+                if (mementoDatetime) {
+                    enabled = true;
+                    title = chrome.i18n.getMessage("menuGetMementoDatetimeTitle", mementoDatetime);
+                    this.getMementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                }
+                else {
+                    title = chrome.i18n.getMessage("menuGetMementoDatetimeTitle", "...");
+                    this.getMementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled));
+                }
 
                 // Accessed Datetime
                 enabled = false;
@@ -616,7 +629,9 @@ Memento.prototype = {
             var isMementoCompliant = false;
             //isMementoCompliant = currentTab.mem.findIfMementoCompliant(headers);
 
-            tgUrl = MementoUtils.getRelUriFromHeaders(headers.getAllResponseHeaders(), "timegate");
+            if (clickedUrl == orgUrl) {
+                tgUrl = MementoUtils.getRelUriFromHeaders(headers.getAllResponseHeaders(), "timegate");
+            }
             if (!tgUrl) {
                 var orgUrl = currentTab.mem.processOriginalUrl(clickedUrl, headers);
                 currentTab.mem.getTimeGateUrl(orgUrl, function(headers) {
@@ -731,8 +746,9 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
     }
 
     var clickedForOriginal = false;
-    var clickedForMemento = false;
+    var clickedForSavedDate = false;
     var clickedForLastMemento = false;
+    var clickedForMementoDatetime = false;
     var clickedForPublishedDatetime = false;
     var clickedForAccessedDatetime = false;
     var clickedForVersionUrl = false;
@@ -746,13 +762,19 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
     }
     for (var i=0, id; id=extensionTabs[tab.id].ui.mementoMenuIds[i]; i++) {
         if (info['menuItemId'] == id) {
-            clickedForMemento = true;
+            clickedForSavedDate = true;
             break;
         }
     }
     for (var i=0, id; id=extensionTabs[tab.id].ui.lastMementoMenuIds[i]; i++) {
         if (info['menuItemId'] == id) {
             clickedForLastMemento = true;
+            break;
+        }
+    }
+    for (var i=0, id; id=extensionTabs[tab.id].ui.getMementoDatetimeMenuIds[i]; i++) {
+        if (info['menuItemId'] == id) {
+            clickedForMementoDatetime = true;
             break;
         }
     }
@@ -792,14 +814,18 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         });
 
     }
-    else if (clickedForMemento) {
+    else if (clickedForSavedDate) {
         extensionTabs[tab.id].mem.setAcceptDatetime("calendar");
         clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl);
-        
         extensionTabs[tab.id].mem.doDatetimeNegotiation(extensionTabs[tab.id], tab.id, clickedUrl, pageUrl);
     }
     else if (clickedForLastMemento) {
         extensionTabs[tab.id].mem.setAcceptDatetime("last-memento");
+        clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl);
+        extensionTabs[tab.id].mem.doDatetimeNegotiation(extensionTabs[tab.id], tab.id, clickedUrl, pageUrl);
+    }
+    else if (clickedForMementoDatetime) {
+        extensionTabs[tab.id].mem.setAcceptDatetime(new Date(extensionTabs[tab.id].mem.mementoDatetime));
         clickedUrl = extensionTabs[tab.id].mem.filterSearchResultUrl(clickedUrl);
         extensionTabs[tab.id].mem.doDatetimeNegotiation(extensionTabs[tab.id], tab.id, clickedUrl, pageUrl);
     }
