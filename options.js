@@ -27,8 +27,9 @@ var mementoTimeGateUrlList = [
     "http://archive.is/timegate/",
     "http://web.archive.org/web/",
     "http://wayback.vefsafn.is/wayback/",
-    "http://www.webarchive.org.uk/wayback/memento/timegate/",
-    "http://webarchive.nationalarchives.gov.uk/timegate/"
+    "https://swap.stanford.edu/",
+    "http://webarchive.nationalarchives.gov.uk/timegate/",
+    "http://www.webarchive.org.uk/wayback/memento/timegate/"
 ]
 
 chrome.storage.local.get(null, function(items) {

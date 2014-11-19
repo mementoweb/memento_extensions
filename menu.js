@@ -86,7 +86,7 @@ UI.prototype = {
 
                 // Get at Memento Datetime
                 enabled = false;
-                if (mementoDatetime) {
+                if (mementoDatetime && mementoDatetime != "non-native") {
                     enabled = true;
                     title = chrome.i18n.getMessage("menuGetMementoDatetimeTitle", mementoDatetime);
                     this.getMementoDatetimeMenuIds.push(this.createContextMenuEntry(title, t, enabled));
