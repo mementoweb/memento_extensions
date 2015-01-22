@@ -27,6 +27,7 @@ var mementoTimeGateUrlList = [
     "http://archive.is/timegate/",
     "http://web.archive.org/web/",
     "http://wayback.vefsafn.is/wayback/",
+    "http://webarchive.proni.gov.uk/timegate/",
     "https://swap.stanford.edu/",
     "http://webarchive.nationalarchives.gov.uk/timegate/",
     "http://www.webarchive.org.uk/wayback/memento/timegate/"
