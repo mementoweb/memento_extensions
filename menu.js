@@ -282,7 +282,7 @@ function Memento() {
 
 Memento.prototype = {
 
-    aggregatorUrl: "http://mementoweb.org/timegate/",
+    aggregatorUrl: "http://timetravel.mementoweb.org/timegate/",
     wikipediaTemplateUrl: ".wikipedia.org/wiki/",
     wikipediaLanguageRE: new RegExp("([a-z]{0,2})\.wikipedia.org/"),
     wikipediaMementoBaseRE: new RegExp("[a-z]{0,2}\.wikipedia.org/w/index.php"),
