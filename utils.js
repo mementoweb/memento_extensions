@@ -256,7 +256,7 @@ MementoUtils = {
      */
 
     getRelUriFromHeaders: function(headers, rel) {
-        var linkHeader = this.getHeader(headers, "link")
+        var linkHeader = this.getHeader(headers, "link");
         var relUrl = false
         if (linkHeader != "") {
             var links = this.parseLinkHeader(linkHeader.trim())
@@ -288,7 +288,7 @@ MementoUtils = {
             success: function(data, textStatus, jqXHR) {
                 return jqXHR
             },
-            error: function(jqXHR, status, error) {
+            error: function(jqXHR, textStatus, error) {
                 return jqXHR
             }
         })

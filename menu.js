@@ -317,7 +317,7 @@ Memento.prototype = {
      * @param: orgHeadResponse: the response headers from the HEAD on the resource.  
      */
     processOriginalUrl: function (reqUrl, orgHeadResponse) {
-        var orgUrl = MementoUtils.getRelUriFromHeaders(orgHeadResponse, "original");
+        var orgUrl = MementoUtils.getRelUriFromHeaders(orgHeadResponse.getAllResponseHeaders(), "original");
         if (!orgUrl) {
             for (i in this.visitedUrls) {
                 if (i == reqUrl) {
@@ -440,6 +440,11 @@ Memento.prototype = {
             }
             else {
                 tgUrl = this.userTimeGateUrl + orgUrl;
+                //tgUrl = "http://timetravel.mementoweb.org/timegate/http://www.lanl.gov";
+                var tgHeadResponse = MementoUtils.ajax(tgUrl, "HEAD", this.acceptDatetime);
+                if (tgHeadResponse.status < 200 || tgHeadResponse.status > 303) {
+                    return false;
+                }
                 if (isTopLevelResource) {
                     this.isPsuedoMemento = true;
                 }
