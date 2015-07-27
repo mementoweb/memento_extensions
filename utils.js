@@ -67,23 +67,77 @@ MementoHttpRequest.prototype = {
 }
 
 MementoUtils = {
+    archiveListUrl: "http://labs.mementoweb.org/aggregator_config/archivelist.xml",
+    aggregatorTimegateUrl: "http://timetravel.mementoweb.org/timegate/",
 
+    updateArchiveList: function() {
+        var req = new MementoHttpRequest();
+        req.doHttp(MementoUtils.archiveListUrl, false, function(resp) {
+                var lastMod = MementoUtils.getHeader(resp.getAllResponseHeaders(), "Last-Modified");
+                lastMod = lastMod.trim();
+                chrome.storage.local.get('archiveListLastMod', function(prev) { 
+                    if (!prev['archiveListLastMod']) {
+                        chrome.storage.local.set({"archiveListLastMod": lastMod});
+                        MementoUtils.processArchiveList();
+                    }
+                    else if (new Date(lastMod) > new Date(prev['archiveListLastMod'])) {
+                        chrome.storage.local.set({"archiveListLastMod": lastMod});
+                        MementoUtils.processArchiveList();
+                    }
+                    //MementoUtils.processArchiveList();
+                });
+            }, "HEAD");
+    },
+
+    processArchiveList: function() {
+        var mementoTimeGateUrlList = {
+            "Memento Aggregator (recommended)": MementoUtils.aggregatorTimegateUrl
+        };
+
+        $.ajax({
+            url: MementoUtils.archiveListUrl,
+            cache: false,
+            success: function(data) {
+                var links = data.getElementsByTagName("link");
+                for (var i=0, link; link=links[i]; i++) {
+                    var timegateUrl = "";
+                    for (var k=0, child; child=link.children[k]; k++) {
+                        if (child.nodeName == "timegate") {
+                            timegateUrl = child.getAttribute("uri");
+                        }
+                        if (child.nodeName == "archive" && child.getAttribute("memento-status") == "yes") {
+                            mementoTimeGateUrlList[link.getAttribute("longname")] = timegateUrl;
+                        }
+                    }
+                }
+                var archives = Object.keys(mementoTimeGateUrlList);
+                archives.sort();
+                sortedTGList = {};
+                for (var i=0, a; a=archives[i]; i++) {
+                    sortedTGList[a] = mementoTimeGateUrlList[a];
+                }
+
+
+                chrome.storage.local.set({"mementoTimeGateUrlList": sortedTGList});
+            }
+        });
+    },
 
     getProtocolAndBaseUrl: function(url) {
-            var protocol = ""
+            var protocol = "";
             if (url.slice(0,7) == "http://") {
-                protocol = "http://"
+                protocol = "http://";
             }
             else if (url.slice(0,8) == "https://") {
-                protocol = "https://"
+                protocol = "https://";
             }
             if (protocol == "") {
-                return false
+                return false;
             }
-            var baseUrl = url.replace(protocol, "")
-            baseUrl = baseUrl.split("/")[0] 
+            var baseUrl = url.replace(protocol, "");
+            baseUrl = baseUrl.split("/")[0]; 
 
-            return [protocol, baseUrl]
+            return [protocol, baseUrl];
     },
 
     /**

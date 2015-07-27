@@ -869,6 +869,7 @@ chrome.tabs.onCreated.addListener( function(tab) {
     if (tab.openerTabId && extensionTabs[tab.openerTabId]) {
         extensionTabs[tab.openerTabId].getDatetimeFromStorage();
     }
+    //MementoUtils.updateArchiveList();
 });
 
 /* Fired when a tab gets focus
@@ -1311,11 +1312,16 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
  * ask the user to set a datetime before proceeding
  */
 chrome.runtime.onInstalled.addListener(function(details) {
+    MementoUtils.updateArchiveList();
     chrome.contextMenus.removeAll();
     if (!extensionTabs[activeTabId]) {
         return;
     }
-    extensionTabs[activeTabId].ui.init();
     chrome.storage.local.set({'mementoTimeGateUrl': extensionTabs[activeTabId].mem.aggregatorUrl});
+    extensionTabs[activeTabId].ui.init();
 });
 
+
+chrome.runtime.onStartup.addListener( function(details) {
+    MementoUtils.updateArchiveList();
+});

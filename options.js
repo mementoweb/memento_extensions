@@ -21,41 +21,30 @@
  * limitations under the License.
  */
 
-var mementoTimeGateUrlList = [
-    "http://timetravel.mementoweb.org/timegate/",
-    "http://wayback.archive-it.org/all/",
-    "http://archive.is/timegate/",
-    "http://web.archive.org/web/",
-    "http://wayback.vefsafn.is/wayback/",
-    "http://webarchive.proni.gov.uk/timegate/",
-    "https://swap.stanford.edu/",
-    "http://webarchive.nationalarchives.gov.uk/timegate/",
-    "http://www.webarchive.org.uk/wayback/memento/timegate/"
-]
-
 chrome.storage.local.get(null, function(items) {
-    var index = 0
-    if (items["mementoTimeGateUrl"]) {
-        for (i in mementoTimeGateUrlList) {
-            if (mementoTimeGateUrlList[i] == items["mementoTimeGateUrl"]) {
-                index = i
-                break
-            }
+    var mementoTimeGateUrlList = items["mementoTimeGateUrlList"];
+        
+    for (var archiveName in mementoTimeGateUrlList) {
+        var cls = "";
+        if (!items['mementoTimeGateUrl'] && archiveName == "Memento Aggregator (recommended)") {
+            $("#optionsCurrentlyUsedArchiveUrl").empty();
+            $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [archiveName, mementoTimeGateUrlList[archiveName]]));
+            cls = " ui-selected";
         }
+        else if (mementoTimeGateUrlList[archiveName] == items["mementoTimeGateUrl"]) {
+            selectedArchiveName = archiveName;
+            $("#optionsCurrentlyUsedArchiveUrl").empty();
+            $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [archiveName, mementoTimeGateUrlList[archiveName]]));
+            cls = " ui-selected";
+        }
+        $("#selectable").append("<li class='ui-widget-content"+cls+"'>"+archiveName+"</li>");
     }
-    var selectedArchive = $($("#selectable li")[index])
-    selectedArchive.addClass("ui-selected")
-
-    $("#optionsCurrentlyUsedArchiveUrl").empty()
-    $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [selectedArchive[0].textContent, mementoTimeGateUrlList[index]]))
-    
-})
-
-$(function() {
     $( "#selectable li" ).click( function() {
         $(this).addClass("ui-selected").siblings().removeClass("ui-selected")
     })
-    
+})
+
+$(function() {
     $("#optionsTitle").append(chrome.i18n.getMessage("optionsTitle"))
     $("#optionsArchiveDescription").append(chrome.i18n.getMessage("optionsArchiveDescription"))
     $("#optionsCurrentlyUsedArchiveTitle").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveTitle"))
@@ -81,16 +70,17 @@ $(function() {
                 timegateUrl = userTimeGate
                 $("#optionsCurrentlyUsedArchiveUrl").empty()
                 $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", ["Unlisted Archive", timegateUrl]))
+                chrome.storage.local.set({'mementoTimeGateUrl': timegateUrl})
             }
 
             if (timegateUrl == "") {
-                $( "#selectable .ui-selected" ).each(function() {
-                    var index = $( "#selectable li" ).index( this );
-                    $("#optionsCurrentlyUsedArchiveUrl").empty()
-                    $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [this.innerHTML, mementoTimeGateUrlList[index]]))
-                    timegateUrl = mementoTimeGateUrlList[index]
+                var archiveName = $( "#selectable .ui-selected" ).text();
+                chrome.storage.local.get("mementoTimeGateUrlList", function(item) {
+                    $("#optionsCurrentlyUsedArchiveUrl").empty();
+                    $("#optionsCurrentlyUsedArchiveUrl").append(chrome.i18n.getMessage("optionsCurrentlyUsedArchiveUrl", [archiveName, item["mementoTimeGateUrlList"][archiveName]]));
+                    timegateUrl = item["mementoTimeGateUrlList"][archiveName];
+                    chrome.storage.local.set({'mementoTimeGateUrl': timegateUrl})
                 });
             }
-            chrome.storage.local.set({'mementoTimeGateUrl': timegateUrl})
         })
 });
