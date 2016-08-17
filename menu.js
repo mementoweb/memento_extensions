@@ -50,7 +50,7 @@ UI.prototype = {
      */
 
     createContextMenuEntry: function(title, context, enabled, targetUrl) {
-        if (targetUrl == undefined || targetUrl == null) {
+        if (targetUrl == undefined || targetUrl == null || targetUrl.trim() == "") {
             targetUrl = ["<all_urls>"];
         }
 
