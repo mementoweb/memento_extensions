@@ -1275,9 +1275,12 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 /* 
  * On Tab Created event listener
  * Creates an extension instance for that tab
- * and initializes all the flags
+ * and initializes all the flags.
+ * Update: v1.0: removing this event... 
+ * tabs.onActivated does the same work better. 
  */
 
+/*
 chrome.tabs.onCreated.addListener( function(tab) {
     extensionTabs[tab.id] = new MementoTabs(tab.id);
     if (tab.openerTabId && extensionTabs[tab.openerTabId]) {
@@ -1285,6 +1288,7 @@ chrome.tabs.onCreated.addListener( function(tab) {
     }
     //MementoUtils.updateArchiveList();
 });
+*/
 
 /* Fired when a tab gets focus
  * the context menu and the plugin icons are refreshed
@@ -1296,7 +1300,7 @@ chrome.tabs.onCreated.addListener( function(tab) {
 chrome.tabs.onActivated.addListener( function(tab) {
     activeTabId = tab.tabId;
     if (!extensionTabs[activeTabId]) {
-        extensionTabs[activeTabId] = new MementoTabs(tab.id);
+        extensionTabs[activeTabId] = new MementoTabs(tab.tabId);
     }
     extensionTabs[activeTabId].getDatetimeFromStorage();
     extensionTabs[activeTabId].getTimeGateFromStorage();
