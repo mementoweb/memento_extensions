@@ -1,1 +1,1 @@
-bash -c "zip -r memento_chrome.zip ./* --exclude=*.git* --exclude=*.DS_Store* --exclude=*chrome* --exclude=*firefox* && cd chrome && zip -ur ../memento_chrome.zip _locales manifest.json"
+bash -c "zip -r memento_chrome.zip ./* --exclude=*.git* --exclude=*.DS_Store* --exclude=*chrome* --exclude=*firefox* && cd chrome && zip -ur ../memento_chrome.zip _locales manifest.json --exclude=*.git* --exclude=*.DS_Store*"
