@@ -20,8 +20,8 @@
     "background": {
         "scripts": [
             "memento.js",
-            "lib/jquery-ui/js/jquery-1.9.1.js",
-            "lib/jquery-ui/js/jquery-ui-1.10.3.custom.min.js"
+            "lib/jquery-ui/jquery.js",
+            "lib/jquery-ui/jquery-ui.min.js"
         ]
     },
 

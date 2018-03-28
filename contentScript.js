@@ -1,7 +1,7 @@
 function getAllLinkVersionDate() {
     
-    var hrefs = document.getElementsByTagName("a")
-    var hrefDatetime = {}
+    var hrefs = document.getElementsByTagName("a");
+    var hrefDatetime = {};
     for (var i=0, a; a=hrefs[i]; i++) {
         /*
         if (hrefDatetime[a['href']]) {
@@ -9,29 +9,29 @@ function getAllLinkVersionDate() {
         }
         */
         if (!hrefDatetime[a['href']]) {
-            hrefDatetime[a['href']] = {}
+            hrefDatetime[a['href']] = {};
         }
         if (!hrefDatetime[a['href']]['versionDate']) {
-            hrefDatetime[a['href']]['versionDate'] = (a.getAttribute('data-versiondate') != null) ? a.getAttribute('data-versiondate') : false 
+            hrefDatetime[a['href']]['versionDate'] = (a.getAttribute('data-versiondate') != null) ? a.getAttribute('data-versiondate') : false; 
         }
         if (!hrefDatetime[a['href']]['versionUrl']) {
-            hrefDatetime[a['href']]['versionUrl'] = (a.getAttribute('data-versionurl') != null) ? a.getAttribute('data-versionurl') : false 
+            hrefDatetime[a['href']]['versionUrl'] = (a.getAttribute('data-versionurl') != null) ? a.getAttribute('data-versionurl') : false; 
         }
     }
-    return hrefDatetime
+    return hrefDatetime;
 }
 
 function getMetaVersionDate() {
     
-    var hrefs = document.getElementsByTagName("meta")
-    var metaDatetime = {}
+    var hrefs = document.getElementsByTagName("meta");
+    var metaDatetime = {};
     for (var i=0, a; a=hrefs[i]; i++) {
         if (a.getAttribute('itemprop') == "datePublished") {
-            metaDatetime["datePublished"] = (a.getAttribute('content') != null) ? a.getAttribute('content'): false
+            metaDatetime["datePublished"] = (a.getAttribute('content') != null) ? a.getAttribute('content') : false;
             break;
         }
     }
-    return metaDatetime
+    return metaDatetime;
 }
 
 function sendMetaInfoToExtension() {

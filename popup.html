@@ -2,31 +2,25 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" href="lib/jquery-ui/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
-        <style>
-            body {
-                min-width: 250px;
-                min-height: 350px;
-                overflow-x: hidden;
-                font-family: Verdana,Arial,sans-serif;
-                font-size: 0.9em;
-            }
-        </style>
-        <script src="lib/jquery-ui/js/jquery-1.9.1.js"></script>
-        <script src="lib/jquery-ui/js/jquery-ui-1.10.3.custom.min.js"></script>
+        <link rel="stylesheet" href="lib/jquery-ui/jquery-ui.min.css" />
+        <link rel="stylesheet" href="lib/memento.css" />
+        <script src="lib/jquery-ui/jquery.js"></script>
+        <script src="lib/jquery-ui/jquery-ui.min.js"></script>
         <script src="popup.js"></script>
         <script src="memento.js"></script>
     </head>
     <body>
         <p>
-            <span id="dateText"></span><input type="text" id="dateBox" size="10" />
-            <span id="timeText"></span><input type="text" id="timeBox" size="8" value="00:00:00" />
+            <span id="dateText"></span>
+            <input type="text" id="dateBox" />
+            <span id="timeText"></span>
+            <input type="text" id="timeBox" value="00:00:00" />
         </p>
-        <div id="datepicker" style="font-size: .9em;"></div>
+        <div id="datepicker"></div>
         <p id="descriptionText"></p>
-        <div style="text-align: center; font-size: 0.9em;">
-            <button id="setDatetime"></button>
+        <div id="buttons">
             <button id="cancelDatetime"></button>
+            <button id="setDatetime"></button>
         <div>
     </body>
 </html>

@@ -1,0 +1,28 @@
+
+body {
+    width: 255px;
+    min-width: 250px;
+    min-height: 350px;
+    overflow-x: hidden;
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 0.9em;
+}
+
+#buttons {
+	position: relative;
+	margin: 0px auto; 
+	text-align: center; 
+	font-size: 0.9em;
+}
+
+#datepicker {
+	font-size: 0.9em;
+}
+
+#dateBox {
+	width: 65px;
+}
+
+#timeBox {
+	width: 55px;
+}
