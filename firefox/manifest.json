@@ -1,0 +1,59 @@
+{
+    "manifest_version": 2,
+    "name": "__MSG_extensionName__",
+    "default_locale": "en",
+    "description": "__MSG_extensionDescription__",
+    "version": "0.0.1", 
+
+    "applications": {
+        "gecko": {
+            "id": "timetravel@mementoweb.org"
+        }
+    },
+
+    "permissions": [
+        "*://*/*",
+        "<all_urls>",
+        "contextMenus",
+        "storage",
+        "webRequest",
+        "webNavigation",
+        "webRequestBlocking"
+    ],
+
+    "content_security_policy": "default-src *; style-src 'self'; script-src 'self'; object-src 'self'",
+
+    "background": {
+        "scripts": [
+            "memento.js",
+            "lib/jquery-ui/jquery.js",
+            "lib/jquery-ui/jquery-ui.min.js"
+        ]
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["contentScript.js"],
+            "run_at": "document_idle"
+        }
+    ],
+
+    "browser_action": {
+        "default_icon": "img/memento.png",
+        "default_title": "Memento Time Travel",
+        "default_popup": "popup.html"
+    },
+
+    "icons": {
+        "16": "img/memento-16x16.png",
+        "48": "img/memento-48x48.png",
+        "128": "img/memento-128x128.png"
+    },
+
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    }
+
+}

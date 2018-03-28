@@ -715,7 +715,7 @@ MementoTabs.prototype = {
             if (items["mementoTimeGateUrl"]) {
                 extensionTabs[activeTabId].mem.userTimeGateUrl = items["mementoTimeGateUrl"];
             }  
-            else if (extensionTabs[activeTabId]) {
+            else if (extensionTabs.hasOwnProperty(activeTabId)) {
                 extensionTabs[activeTabId].mem.userTimeGateUrl = extensionTabs[activeTabId].mem.aggregatorUrl;
             }
         });
