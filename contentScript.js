@@ -44,6 +44,6 @@ if (document.readyState == "complete") {
 }
 else {
     window.addEventListener("load", function() {
-        setTimeout(sendMetaInfoToExtension(), 0);
+        sendMetaInfoToExtension();
     });
 }
